@@ -1,0 +1,303 @@
+.my-4 {
+  margin-top: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+}
+.title-group h1{
+  font-size: 30px;
+  font-weight: 600;
+  color: #8168cd;
+}
+.custom-block {
+  --bs-bg-opacity: 1;
+  background-color: white !important;
+  padding: 40px;
+  width: 600px;
+}
+.nav-tabs {
+  /* border-bottom: 1px solid var(--border-color); */
+  margin-bottom: 35px;
+}
+
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+}
+
+.nav-tabs .nav-item.show .nav-link,
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link:focus,
+.nav-tabs .nav-link:hover {
+  border-bottom-color: #8168cd;
+  color: #8168cd;
+}
+.nav-tabs .nav-item.show .nav-link,
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link:focus,
+.nav-tabs .nav-link:hover {
+  border-bottom-color: #8168cd;
+  color: #8168cd;
+  background-color: #d3d3d3;
+  /* color: var(--bs-nav-tabs-link-active-color);
+  background-color: var(--bs-nav-tabs-link-active-bg);
+  border-color: var(--bs-nav-tabs-link-active-border-color); */
+}
+.nav-tabs .nav-link {
+  border-radius: 0;
+  border-top: 0;
+  border-top-color: currentcolor;
+  border-right: 0;
+  border-right-color: currentcolor;
+  border-left: 0;
+  border-left-color: currentcolor;
+  color: var(--p-color);
+  font-size: var(--menu-font-size);
+  font-weight: var(--font-weight-normal);
+  padding: 15px 25px;
+  transition: all 0.3s;
+}
+.nav-tabs .nav-link {
+  /* margin-bottom: calc(-1 * var(--bs-nav-tabs-border-width)); */
+  background: 0 0;
+  background-color: rgba(0, 0, 0, 0);
+  /* border: var(--bs-nav-tabs-border-width) solid transparent; */
+  /* border-top-left-radius: var(--bs-nav-tabs-border-radius);
+    border-top-right-radius: var(--bs-nav-tabs-border-radius); */
+}
+[type="button"]:not(:disabled),
+[type="reset"]:not(:disabled),
+[type="submit"]:not(:disabled),
+button:not(:disabled) {
+  cursor: pointer;
+}
+.nav-link {
+  display: block;
+  /* padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
+    font-size: var(--bs-nav-link-font-size);
+    font-weight: var(--bs-nav-link-font-weight);
+    color: var(--bs-nav-link-color); */
+  text-decoration: none;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
+}
+[type="button"],
+[type="reset"],
+[type="submit"],
+button {
+  appearance: button;
+}
+a,
+button {
+  touch-action: manipulation;
+  transition: all 0.3s;
+}
+button,
+select {
+  text-transform: none;
+}
+button,
+input,
+optgroup,
+select,
+textarea {
+  margin: 0;
+  margin-bottom: 0px;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+button {
+  border-radius: 0;
+}
+.tab-content {
+  background-color: white;
+  /* border-radius: 20px; */
+  /* padding: 30px; */
+}
+.tab-content > .active {
+  display: block;
+}
+.tab-content > .tab-pane {
+  display: none;
+}
+.fade {
+  transition: opacity 0.15s linear;
+}
+.mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+/* h6 {
+    font-size: var(--h6-font-size);
+  } */
+.form-control::placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  margin: 0;
+  margin-bottom: 0px;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+.mb-1 {
+  margin-bottom: 0.25rem !important;
+}
+.input-group {
+  position: relative;
+  display: flex;
+  /* flex-wrap: wrap; */
+  align-items: stretch;
+  width: 100%;
+}
+.profile-form
+  .input-group:not(.has-validation)
+  > :not(:last-child):not(.dropdown-toggle):not(.dropdown-menu):not(
+    .form-floating
+  ) {
+  border-radius: 20px;
+}
+.profile-form .profile-image {
+  width: 52px;
+  height: 52px;
+}
+.custom-block .profile-image {
+  width: 64px;
+  height: 64px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+.profile-image {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+}
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+}
+.form-control::file-selector-button {
+  padding: 0.375rem 0.75rem;
+  margin: -0.375rem -0.75rem;
+  -webkit-margin-end: 0.75rem;
+  margin-inline-end: 0.75rem;
+  color: #212529;
+  background-color: #e9ecef;
+  pointer-events: none;
+  border-color: inherit;
+  border-style: solid;
+  border-width: 0;
+  border-inline-end-width: 1px;
+  border-radius: 0;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+::file-selector-button {
+  font: inherit;
+  appearance: button;
+}
+
+.profile-form
+  .input-group
+  > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(
+    .valid-feedback
+  ):not(.invalid-tooltip):not(.invalid-feedback) {
+  margin-left: 0;
+  
+}
+.d-flex {
+  display: flex !important;
+}
+button[type="button"],
+.custom-form button[type="submit"] {
+  border-radius: 50px;
+  font-size: 20px;
+  transition: all 0.3s;
+  margin-bottom: 0;
+}
+.custom-form .form-control {
+  color: #6c757d;
+  border-radius: 50px;
+  font-size: 18px;
+  margin-bottom: 24px;
+  padding: 10px 20px;
+  outline: none;
+  transition: all 0.3s;
+}
+[type="button"]:not(:disabled),
+[type="reset"]:not(:disabled),
+[type="submit"]:not(:disabled),
+button:not(:disabled) {
+  cursor: pointer;
+}
+.me-3 {
+  margin-right: 1rem !important;
+}
+.custom-form{
+  box-shadow: none;
+}
+form{
+  width: 100%;
+  padding: 0px;
+  background-color: white;
+  box-shadow: 2px 2px 2px grey;
+  margin-top: 74px;
+}
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  border-radius: 50px;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 50px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.custom-form button[type="submit"] {
+  background: #6c757d;
+  border: none;
+  color: white;
+  height: 49px;
+}
+.mb-4 {
+  font-size: 30px;
+  color: #6c757d;
+  font-weight: 700;
+}
+.nav-tabs {
+  border-bottom: 1px solid #bbbec4;
+  margin-bottom: 35px;
+}
+.form-control:hover:not(:disabled):not([readonly])::file-selector-button {
+  background-color: #dde0e3;
+}
+.custom-form .form-control:hover,
+.custom-form .form-control:focus {
+  background: #8168cd;
+  border-color: transparent;
+}
+#inputGroupFile02 {
+  border-radius: 50px;
+  background-color: #e9ecef;
+}
+.nav-tabs .nav-link:hover{
+  border-bottom: 1px solid #8168cd;
+  color: #8168cd;
+  background-color: #d3d3d3;
+}

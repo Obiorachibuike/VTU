@@ -1,0 +1,157 @@
+.py-4 {
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+}
+.border-start {
+  border-left: var(--bs-border-width) var(--bs-border-style)
+    var(--bs-border-color) !important;
+}
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+.my-4 {
+  margin-top: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.bg-white {
+  --bs-bg-opacity: 1;
+  /* background-color: rgba(var(--bs-white-rgb),var(--bs-bg-opacity)) !important; */
+}
+.mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+h5 {
+  font-size: 20px;
+  color: #1d3557;
+  font-weight: 600;
+}
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.account-table {
+  background: #ececec;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: var(--bs-table-color);
+  vertical-align: top;
+  border-color: var(--bs-table-border-color);
+}
+table {
+  caption-side: bottom;
+  border-collapse: collapse;
+}
+.account-table thead {
+  background: var(--custom-btn-bg-color);
+}
+.table > thead {
+  vertical-align: bottom;
+}
+tbody,
+td,
+tfoot,
+th,
+thead,
+tr {
+  border-color: inherit;
+  border-style: solid;
+  border-width: 0;
+}
+.account-table tr {
+  font-weight: var(--font-weight-normal);
+}
+.account-table th,
+.account-table tr {
+  font-size: var(--btn-font-size);
+  padding: 15px 10px;
+}
+.table > tbody {
+  vertical-align: inherit;
+}
+.account-table tbody tr:nth-child(2n + 1) {
+  background: var(--white-color);
+}
+.account-table tr {
+  font-weight: var(--font-weight-normal);
+}
+.account-table th,
+.account-table tr {
+  font-size: var(--btn-font-size);
+  padding: 15px 10px;
+}
+.account-table > :not(caption) > * > * {
+  border-bottom: 0;
+  padding: 15px 10px;
+}
+.table > :not(caption) > * > * {
+  padding: 0.5rem 0.5rem;
+  background-color: var(--bs-table-bg);
+  border-bottom-width: 1px;
+  box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
+}
+.text-danger {
+  --bs-text-opacity: 1;
+  color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
+}
+.me-1 {
+  margin-right: 0.25rem !important;
+}
+.badge {
+  border-radius: 30px;
+  font-weight: 400;
+  line-height: normal;
+  padding-right: 10px;
+  padding-left: 10px;
+  padding-bottom: 4px;
+}
+.text-bg-pending {
+  color: #fff !important;
+  background-color: gold !important;
+}
+
+.account-table thead {
+  background: #a8dadc;
+}
+.table > thead {
+  vertical-align: bottom;
+}
+.account-table tbody tr:nth-child(2n + 1) {
+  background: white;
+}
+th {
+  text-align: inherit;
+}
+.text-bg-success {
+  color: #fff !important;
+  background-color: #198754 !important;
+}
+.text-bg-failed {
+  color: #fff !important;
+  background-color: red !important;
+}
+.custom-block {
+  background: #f1faee;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  padding: 30px;
+  margin-bottom: 24px;
+  width: 100%;
+  margin: auto;
+}
+.pagination {
+  display: flex;
+  letter-spacing: 20px;
+  justify-content: center;
+  color: black;
+  cursor: default;
+}

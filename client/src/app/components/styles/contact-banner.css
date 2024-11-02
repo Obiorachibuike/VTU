@@ -1,0 +1,20 @@
+.contact-banner{
+    background-image: url('/image/person2.jpg');
+    height: 400px;
+    width: 100%;
+    background-position: center 50%;
+    background-size: cover;
+    background-attachment: fixed;
+}
+.contact-overlay{
+    background-color: black;
+    opacity: 0.8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 50px;
+    font-weight: 1000;
+    width: 100%;
+    height: 100%;
+    color: white;
+}

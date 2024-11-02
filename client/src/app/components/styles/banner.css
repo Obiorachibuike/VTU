@@ -1,0 +1,123 @@
+.banner {
+  background-image: url("/image/4g.jpeg");
+  height: 450px;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  position: relative;
+  /* background-attachment: fixed; */
+}
+.banner-details {
+  color: white;
+  color: white;
+  width: 40%;
+  padding: 50px;
+  margin-left: 50px;
+}
+.banner-details h1 {
+  font-size: 40px;
+  font-weight: 800;
+}
+.overlay {
+  background-color: black;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: 3;
+  opacity: 0.8;
+}
+.img {
+  width: 50px;
+}
+.mtn {
+  position: absolute;
+  top: 233px;
+  left: 615px;
+  transition: all 2s;
+  transform: rotateZ(45deg);
+  opacity: 0.5;
+  animation-delay: 2s !important;
+  animation: airtel 2s  infinite  !important;
+}
+.glo {
+  position: absolute;
+  top: 151px;
+  right: 500px;
+  transition: all 2s;
+  transform: rotateZ(45deg);
+  opacity: 0.5;
+  animation-delay: 4s !important;
+  animation: glo 2s  infinite  !important;
+}
+.mobile {
+  position: absolute;
+  top: 206px;
+  left: 500px;
+  transition: all 2s;
+  transform: rotateY(60deg);
+  opacity: 0.5;
+  animation-delay: 6s !important;
+  animation: mobile 2s  infinite  !important;
+}
+.airtel {
+  position: absolute;
+  top: 212px;
+  right: 612px;
+  transition: all 2s;
+  transform: rotateZ(45deg);
+  opacity: 0.5;
+  animation-delay: 8s !important;
+  animation: airtel 2s  infinite  !important;
+  /* animation-name: airtel  !important; */
+}
+
+@keyframes airtel {
+  0% {
+    top: 212px;
+  }
+  50%{
+    
+    top: 250px;
+  }
+  100% {
+    top: 212px;
+  }
+}
+@keyframes mtn {
+  0% {
+    top: 212px;
+  }
+  50%{
+    
+    top: 250px;
+  }
+  100% {
+    top: 212px;
+  }
+}
+@keyframes glo {
+  0% {
+    top: 166px;
+  }
+  50%{
+    
+    top: 181px;
+  }
+  100% {
+    top: 166px;
+  }
+}
+@keyframes mobile {
+  0% {
+    top: 212px;
+  }
+  50%{
+    
+    top: 250px;
+  }
+  100% {
+    top: 212px;
+  }
+}
+

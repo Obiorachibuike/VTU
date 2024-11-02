@@ -1,0 +1,19 @@
+.service-heading h1 {
+  font-size: 45px;
+  font-weight: 1000;
+  text-align: center;
+}
+/* .service-container {
+  background-color: whitesmoke;
+  padding: 133px 0px;
+} */
+.offer-details {
+  display: flex;
+  justify-content: space-around;
+  width: 80%;
+  margin: auto;
+  flex-wrap: wrap;
+}
+.offer-details-cont {
+  margin-top: 50px;
+}

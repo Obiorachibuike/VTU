@@ -1,0 +1,17 @@
+.airtime-cont{
+    /* width: 90%; */
+    margin: auto;
+    height: 100%;
+}
+.airtime-container{
+    background-image: url('/image/background-wall.jpg');
+    min-height: 615px;
+}
+.airtime-content{
+    height: 100%;
+}
+
+.transaction_details{
+    width: 80%;
+    margin: auto;
+}

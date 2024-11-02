@@ -1,0 +1,244 @@
+.dashboard .top .sidebar-toggle {
+  font-size: 26px;
+  color: #949292;
+  cursor: default;
+  height: 30px;width: 50px;
+  line-height: 40px;
+  display: none;
+}
+/* .dashboard .top{
+  background-color: white;
+} */
+.header-cont{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100px;
+}
+
+.dashboard .top .search-box {
+  position: relative;
+  height: 45px;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 30px;
+  border: 2px solid #8168cd;
+  border-radius: 50px;
+ 
+}
+.dashboard .top .search-box.dark{
+  border: 2px solid white;
+  border-radius: 50px;
+}
+.dashboard .top .search-box.light{
+  border: 2px solid #8168cd;
+  border-radius: 50px;
+}
+.mail a{
+  color:  #8168cd;
+}
+.mail a:hover{
+  color:  #c1c2c9;
+}
+.top .search-box input {
+  position: absolute;
+  border: 1px solid var(--border-color);
+  background-color: var(--panel-color);
+  padding: 0 25px 0 50px;
+  border-radius: 5px;
+  height: 100%;
+  width: 100%;
+  color: var(--text-color);
+  font-size: 15px;
+  font-weight: 400;
+  border-radius: 150px;
+  outline: none;
+}
+.top .search-box input.dark{
+  color: white;
+}
+.top .search-box input.light{
+  color: black;
+}
+.top .search-box i {
+  position: absolute;
+  left: 15px;
+  font-size: 22px;
+  z-index: 10;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--black-light-color);
+}
+.top img {
+  width: 40px;
+  border-radius: 50%;
+}
+.flex-column {
+  flex-direction: column;
+  margin-left: 10px;
+}
+.dropdown {
+  position: relative;
+}
+.nav-item{
+  list-style-type: none;
+}
+.view-all{
+  width: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #8168cd;
+  border-radius: 50px;
+  color: white;
+}
+.dropdown ul {
+  position: absolute;
+  right: 5px;
+  width: 235px;
+  padding: 20px;
+  display: none; 
+  background-color: white;
+  box-shadow: 2px 2px 7px 1px gray;
+}
+.nav-icon{
+  position: relative;
+}
+.badge-number{
+  border-radius: 30px;
+  font-weight: 400;
+  line-height: normal;
+  
+  position: absolute;
+  top: -16px;
+  right: -9px;
+  background-color: red;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 20px;
+  width: 20px;
+}
+
+.logo-name-cont{
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 235px;
+  font-size: 30px;
+  font-weight: 700;
+}
+.logo_name span{
+  color: #8168cd;
+  /* color: linear-gradient(#8168cd,#22affb); */
+}
+
+.dropdown:hover ul {
+  display: block;
+}
+.dropdown ul li {
+  /* margin-top: 10px; */
+  padding: 5px;
+  height: 100%;
+  display: flex;
+  /* justify-content: center; */
+  align-items: center;
+  width: 100%;
+}
+.dropdown ul li:hover {
+  background-color: lightgray;
+}
+.dropdown ul li:first-child {
+  background-color: transparent;
+}
+.dropdown ul li:first-child {
+  margin-top: 10px;
+  padding-top: 20px;
+  height: 10px;
+  display: flex;
+  /* justify-content: center; */
+  align-items: center;
+  margin-bottom: 40px;
+}
+.dropdown ul li:second-child {
+  margin-top: 50px;
+  padding-top: 20px;
+  height: 10px;
+  display: flex;
+  /* justify-content: center; */
+  align-items: center;
+}
+hr {
+  width: 100%;
+  height: 3px;
+  background-color: lightgray;
+}
+.dropdown-footer a:hover{
+  color: #8168cd;
+}
+.dropdown-footer a{
+ width: 100%;
+}
+.top.adjust{
+  left: -300px;
+}
+.dashboard .top
+{
+  position: fixed;
+  top: 0;
+  left: 250px;
+  transition: 1s;
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  /* background-color: var(--panel-color); */
+  transition: var(--tran-05);
+  z-index: 10;
+}
+.position{
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  color: #949292;
+  z-index: 50;
+}
+.icon{
+  font-size: 25px;
+
+}
+.icon.dark{
+  color: white;
+}
+.icon.light{
+  color: #6c757d;
+}
+
+
+.dashboard .top.dark{
+  background-color: rgb(0, 0, 0);
+  transition: 1s;
+}
+.dashboard .top.light{
+  background-color: white;
+  transition: 1s;
+}
+.logo_name.dark{
+  color: white;
+}
+.logo_name.light{
+  color: black;
+}
+
+@media (max-width:1015px) {
+  .dashboard .top .search-box{
+    width: 350px;
+  }
+}
+@media (max-width:850px) {
+  .dashboard .top .search-box{
+    display: none;
+  }
+}

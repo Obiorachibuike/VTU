@@ -1,0 +1,51 @@
+[
+    {
+      "name": "Tesla Model S",
+      "model": "Model S",
+      "year": 2023,
+      "manufacturer": "Tesla"
+    },
+    {
+      "name": "Ford Mustang",
+      "model": "Mustang",
+      "year": 2022,
+      "manufacturer": "Ford"
+    },
+    {
+      "name": "Chevrolet Camaro",
+      "model": "Camaro",
+      "year": 2021,
+      "manufacturer": "Chevrolet"
+    },
+    {
+      "name": "BMW 3 Series",
+      "model": "320i",
+      "year": 2020,
+      "manufacturer": "BMW"
+    },
+    {
+      "name": "Audi A4",
+      "model": "A4",
+      "year": 2023,
+      "manufacturer": "Audi"
+    },
+    {
+      "name": "Mercedes-Benz C-Class",
+      "model": "C300",
+      "year": 2022,
+      "manufacturer": "Mercedes-Benz"
+    },
+    {
+      "name": "Honda Civic",
+      "model": "Civic",
+      "year": 2021,
+      "manufacturer": "Honda"
+    },
+    {
+      "name": "Toyota Corolla",
+      "model": "Corolla",
+      "year": 2023,
+      "manufacturer": "Toyota"
+    }
+  ]
+  

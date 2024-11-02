@@ -1,0 +1,113 @@
+.accordion .card-header a::before {
+  position: absolute;
+  content: " ";
+  left: -20px;
+  top: calc(145% + -52px);
+  width: 8px;
+  height: 8px;
+  border-color: #ccc;
+  border-top-color: rgb(204, 204, 204);
+  border-right-color: rgb(204, 204, 204);
+  border-top-color: rgb(204, 204, 204);
+  border-right-color: rgb(204, 204, 204);
+  border-top: 2px solid;
+  border-right: 2px solid;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  transition: all 0.2s ease;
+  backface-visibility: hidden;
+  /* right: ;    */
+  transform: rotate(140deg);
+}
+.align h1 {
+  width: 30%;
+}
+.align .col-md-9 {
+  width: 70%;
+}
+.align {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 40px;
+}
+.container {
+  width: 80%;
+  margin: auto;
+  background-color: white;
+  margin-top: 50px;
+  padding: 30px;
+}
+#content {
+  background-image: url("/image/background-wall.jpg");
+  height: auto;
+  width: 100%;
+  padding: 20px;
+}
+center {
+  padding-bottom: 35px;
+  color: #0c2f54;
+  font-family: "Poppins", sans-serif;
+  font-size: 24px !important;
+  font-size: 1.5rem !important;
+}
+.text-5{
+  color: #0c2f54;
+  font-family: "Poppins", sans-serif;
+  font-size: 24px !important;
+  font-size: 1.5rem !important;
+
+}
+.align .card{
+    position: relative;
+    min-height: 50px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.align .card:last-child{
+ 
+  border-bottom: none;
+}
+.collapse{
+    display: none;
+}
+.card-header{
+    padding-top: 12px;
+}
+.text-center{
+    padding: 50px 0px;
+  border-top: 1px solid #e5e7eb;
+}
+.btn:not(.btn-link):hover {
+    -webkit-box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+    -webkit-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+  }
+  .btn:not(:disabled):not(.disabled) {
+    cursor: pointer;
+  }
+  .btn-primary:hover {
+    background-color: #0e7fd9;
+    border-color: #0e7fd9;
+  }
+  .btn {
+    display: inline-block;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    border: 1px solid transparent;
+      border-top-color: transparent;
+      border-right-color: transparent;
+      border-bottom-color: transparent;
+      border-left-color: transparent;
+    padding: .375rem .75rem;
+    background-color: #228ec8;
+    font-size: 1rem;
+    line-height: 1.5;
+    padding: .750rem 2.5rem;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+  }

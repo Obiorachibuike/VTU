@@ -1,0 +1,237 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600&display=swap");
+/* *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+} */
+.nav-icons {
+  font-size: 29px;
+}
+
+body{
+    min-height: 100vh;
+    background-color:white;
+}
+
+/* === Custom Scroll Bar CSS === */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background:white;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0b3cc1;
+}
+
+body.dark::-webkit-scrollbar-thumb:hover,
+body.dark .activity-data::-webkit-scrollbar-thumb:hover{
+    background: white;
+}
+
+nav {
+  position: fixed;
+  top: 55px;
+  left: 0;
+  height: 100%;
+  width: 265px;
+  padding: 10px 14px;
+  /* background-color: white; */
+  border-right: 1px solid #8168cd;
+  transition: all 0.5s ease;
+}
+nav.close {
+  width: 73px;
+}
+nav.logo-name {
+  display: flex;
+  align-items: center;
+}
+nav.logo-image {
+  display: flex;
+  justify-content: center;
+  min-width: 45px;
+}
+nav .logo-image img {
+  width: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+nav .logo-name .logo_name {
+  font-size: 22px;
+  font-weight: 600;
+  color: #ccc;
+  margin-left: 14px;
+  transition: all 0.5s ease;
+}
+nav.close .logo_name {
+  opacity: 0;
+  pointer-events: none;
+}
+nav .menu-items {
+  margin-top: 40px;
+  height: calc(100% - 90px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.menu-items li {
+  list-style: none;
+}
+.menu-items li a {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  text-decoration: none;
+  position: relative;
+  color: #8168cd;
+  justify-content: space-between;
+  padding: 0px 10px;
+  width: 100%;
+}
+
+.menu-items li a:hover {
+  background-color: #d3d3d3;
+  /* margin-top: 5px; */
+}
+.nav-links li a:hover:before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+  background-color: #3a3b3c;
+}
+body.dark li a:hover:before {
+  background-color: #ccc;
+}
+.menu-items li a i {
+  font-size: 24px;
+  min-width: 45px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #707070;
+}
+.menu-items li a .link-name {
+  font-size: 18px;
+  font-weight: 400;
+  color: #707070;
+  transition: all 0.5s ease;
+  width: 165px;
+  margin-left: 15px;
+}
+nav.close li a .link-name {
+  opacity: 0;
+  pointer-events: none;
+}
+.nav-links li a:hover i,
+.nav-links li a:hover .link-name {
+  color: black;
+}
+body.dark .nav-links li a:hover i,
+body.dark .nav-links li a:hover .link-name {
+  color: black;
+}
+.menu-items .logout-mode {
+  padding-top: 10px;
+  border-top: 1px solid #e6e5e5;
+}
+.menu-items .mode {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.menu-items .mode-toggle {
+  position: absolute;
+  right: 14px;
+  height: 50px;
+  min-width: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.mode-toggle .switch {
+  position: relative;
+  display: inline-block;
+  height: 22px;
+  width: 40px;
+  border-radius: 25px;
+  background-color: #ddd;
+}
+.switch:before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 15px;
+  width: 15px;
+  background-color: #242526;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+.mode-toggle.dark .switch:before {
+  left: 20px;
+  background-color: black;
+}
+.mode-toggle.dark body {
+  color: white;
+  background-color: black;
+}
+
+.dashboard {
+  position: relative;
+  left: 250px;
+  background-color: white;
+  min-height: 100vh;
+  width: calc(100% - 250px);
+  padding: 10px 14px;
+  transition: all 0.5s ease;
+}
+nav.close ~ .dashboard {
+  left: 73px;
+  width: calc(100% - 73px);
+}
+.dashboard .top {
+  position: fixed;
+  top: 0;
+  left: 250px;
+  display: flex;
+  width: calc(100% - 250px);
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background-color: #242526;
+  transition: all 0.5s ease;
+  z-index: 10;
+}
+nav.close ~ .dashboard .top {
+  left: 73px;
+  width: calc(100% - 73px);
+}
+.dashboard .top .sidebar-toggle {
+  font-size: 26px;
+  color: #ccc;
+  cursor: pointer;
+}
+
+nav.dark{
+  background-color: rgb(46, 45, 45);
+  color: white;
+}
+.menu-items li a .link-name.dark{
+  color: white;
+  
+}

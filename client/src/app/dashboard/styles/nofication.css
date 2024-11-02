@@ -1,0 +1,19 @@
+.note{
+    list-style-type: none;
+  background-color: white;
+  width: 80%;
+  margin: auto;
+  padding: 20px;
+  cursor: default;
+}
+.note-cont{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    min-height: 582px;
+  margin: 55px 0px;
+}
+.notification-item div p:last-child{
+    color: #8168cd;
+}

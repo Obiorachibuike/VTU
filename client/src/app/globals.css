@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*{
+  list-style-type: none;
+}
+.background {
+  background-image: url("/image/background-wall.jpg");
+  padding: 20px;
+  min-height: 500px;
+  background-position: center;
+  background-attachment: fixed;
+}
+a {
+  color: #6c757d;
+}
+body {
+  background-color: white;
+}
+.dashboard {
+  transition: 0.3s all;
+}
+.svg-inline--fa {
+  font: 25px;
+}
