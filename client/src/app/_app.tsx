@@ -1,57 +1,45 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { UserProvider } from './dashboard/Context/UserContext';
+import cookie from 'js-cookie'; // Make sure this is installed
 
 const RedirectOnDynamicLink = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const handleNavigation = (event) => {
-      const { location } = event;
+    const handleNavigation = (event: PopStateEvent) => {
+      const location = window.location;
 
-      // Check if the user is trying to access any part of the website
-      // and redirect them to the signup page if they are not logged in
+      // Redirect to /signup if not authenticated and trying to access other routes
       if (!isAuthenticated() && !location.pathname.toLowerCase().includes('/signup')) {
         router.push('/signup');
         event.preventDefault();
       }
     };
 
-    // Add event listener to handle browser navigation
     window.addEventListener('popstate', handleNavigation);
 
-    // Clean up the event listener on component unmount
     return () => {
       window.removeEventListener('popstate', handleNavigation);
     };
   }, [router]);
 
-  return null; // This component does not render anything
+  return null;
 };
 
-function MyApp({ Component, pageProps }) {
+function MyApp({ Component, pageProps }: any) {
   return (
-    <>
-    <UserProvider >
+    <UserProvider>
       <RedirectOnDynamicLink />
       <Component {...pageProps} />
     </UserProvider>
-      
-    </>
   );
 }
 
-// A simple function to check if the user is authenticated
-const isAuthenticated = () => {
-  // Implement your authentication logic here
-  const token = cookie.get('token'); // Example: Check if a token exists in cookies
+// Utility function to check authentication
+const isAuthenticated = (): boolean => {
+  const token = cookie.get('token');
   return !!token;
-//   const user = sessionStorage.getItem('user'); // Example: Check if a user object exists in session storage
-//   return !!user;
-//   const token = localStorage.getItem('token'); // Example: Check if a token exists in local storage
-//   return !!token;
-  // For example, you can check if the user is logged in using session, cookies, or any other authentication mechanism
- // Replace with your authentication logic
 };
 
 export default MyApp;
