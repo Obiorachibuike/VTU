@@ -1,8 +1,9 @@
-"use client";
-import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+'use client';
+
+import React, { useState } from 'react';
+import axios from 'axios';
 import "../styles/data_form.css";
-import { UserContext } from "../Context/UserContext";
+import { useUserContext } from '../Context/UserContext'; // ✅ Use hook instead of direct context
 
 // Define plans for each network
 const networkPlans = {
@@ -33,50 +34,32 @@ function DataForm() {
   const [phone, setPhone] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  const context = useContext(UserContext);
+  const { user, setUser } = useUserContext(); // ✅ Get user and setUser from context
 
-  if (context === undefined) {
-    throw new Error('UserContext must be used within a UserProvider');
-  }
-
-  const { user, isAuthenticated } = context;
-console.log(user);
-
-  // Assuming walletBalance is retrieved from the context or props
-  const walletBalance = 1000; // Replace with actual wallet balance logic
+  const walletBalance = user?.wallet?.balance ?? 0;
 
   const handleNetworkChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const network = e.target.value;
     setSelectedNetwork(network);
 
-    switch (network) {
-      case "MTN":
-        setNetworkImage("/image/mtn.jpg");
-        break;
-      case "Glo":
-        setNetworkImage("/image/glo.jpg");
-        break;
-      case "Airtel":
-        setNetworkImage("/image/airtel.jpg");
-        break;
-      case "9mobile":
-        setNetworkImage("/image/9mobile.jpg");
-        break;
-      default:
-        setNetworkImage("");
-        break;
-    }
+    const networkImages: { [key: string]: string } = {
+      MTN: "/image/mtn.jpg",
+      Glo: "/image/glo.jpg",
+      Airtel: "/image/airtel.jpg",
+      "9mobile": "/image/9mobile.jpg",
+    };
 
-    // Update plans based on selected network
+    setNetworkImage(networkImages[network] || "");
+
     setPlans(networkPlans[network] || []);
-    setSelectedPlan(""); // Reset selected plan when network changes
+    setSelectedPlan("");
   };
 
   const handlePlanChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const plan = e.target.value;
     const selectedPlanData = networkPlans[selectedNetwork]?.find(p => p.value === plan);
     setSelectedPlan(plan);
-    setAmount(selectedPlanData?.price || 0); // Update amount based on selected plan
+    setAmount(selectedPlanData?.price || 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,12 +83,10 @@ console.log(user);
         mode: "debit"
       });
 
-      if (response.status === 200) {
-        // Update user context if needed (not shown here)
-        // setUser(response.data.user);
-
-        setAmount(0); // Reset the amount field
-        setPhone(""); // Reset the phone field
+      if (response.status === 200 && response.data.user) {
+        setUser(response.data.user); // ✅ Update user context
+        setAmount(0);
+        setPhone("");
         setError(null);
       } else {
         setError("Transaction failed");
@@ -118,10 +99,7 @@ console.log(user);
 
   return (
     <div className="form-cont">
-      <form
-        className="data-form form"
-        onSubmit={handleSubmit}
-      >
+      <form className="data-form form" onSubmit={handleSubmit}>
         <div className="data-header-cont">
           <h1 className="data-header">Buy Data</h1>
         </div>
