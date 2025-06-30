@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { useState } from "react";
 import axios from "axios";
 import Link from "next/link";
@@ -6,11 +6,11 @@ import Image from "next/image";
 import "../components/styles/login-form.css";
 
 function AdminLoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
 
@@ -22,12 +22,12 @@ function AdminLoginForm() {
 
       if (response.status === 200) {
         const data = response.data;
-        localStorage.setItem("token", data.token); // Store token in localStorage
-        window.location.href = "/home"; // Redirect to home or user dashboard
+        localStorage.setItem("token", data.token);
+        window.location.href = "/home";
       } else {
         setError("Login failed. Please check your credentials and try again.");
       }
-    } catch (error) {
+    } catch (error: any) {
       setError(error.response?.data?.error || "Login failed. Please try again.");
     }
   };
@@ -84,7 +84,7 @@ function AdminLoginForm() {
                 </button>
               </div>
               <center>
-                Don't have an account? <Link href="/sign_up">Sign up</Link>
+                Don&apos;t have an account? <Link href="/sign_up">Sign up</Link>
               </center>
             </form>
           </div>
