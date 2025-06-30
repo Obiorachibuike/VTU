@@ -1,4 +1,4 @@
-'use client'; // Ensures the frontend code is executed client-side
+'use client';
 
 import axios from 'axios';
 import React, { createContext, useState, useContext, ReactNode } from 'react';
@@ -11,7 +11,7 @@ interface Wallet {
 interface User {
   name: string;
   email: string;
-  transactions: any[]; // Replace 'any' with the appropriate type based on your data
+  transactions: any[];
   wallet: Wallet;
   referralCode: string;
   referralCount: number;
@@ -23,27 +23,24 @@ interface UserContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
   isLoading: boolean;
-  fetchUserDetails: (token: string) => void; // Function to fetch user details based on token
+  fetchUserDetails: (token: string) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const fetchUserDetails = async (token: string) => {
     setIsLoading(true);
-
     try {
       const response = await axios.get('http://localhost:5000/api/auth/user/details', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      console.log(response.data.user);
-      
 
       if (response.status === 200 && response.data.user) {
         setUser(response.data.user);
@@ -53,7 +50,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setIsAuthenticated(false);
       }
     } catch (error) {
-      alert(`Error: ${error.response?.data?.error || 'Failed to fetch user details'}`);
+      if (axios.isAxiosError(error)) {
+        alert(`Error: ${error.response?.data?.error || error.message}`);
+      } else {
+        alert('An unexpected error occurred while fetching user details.');
+      }
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -61,7 +62,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, isAuthenticated, setIsAuthenticated, isLoading, fetchUserDetails }}>
+    <UserContext.Provider
+      value={{ user, setUser, isAuthenticated, setIsAuthenticated, isLoading, fetchUserDetails }}
+    >
       {children}
     </UserContext.Provider>
   );
