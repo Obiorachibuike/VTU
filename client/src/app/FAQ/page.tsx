@@ -7,7 +7,7 @@ import FaqBanner from '../components/faq-banner'
 
 function FAQ() {
   return (
-    // <div>
+    <div>
     //    <SEO
     //     title="FAQ Page"
     //     description="Recharge your Data,Airtime,Tv Subscription,etc at Cheap,Affordable and Fast Rate"
