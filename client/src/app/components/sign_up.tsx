@@ -5,8 +5,9 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import axios from "axios";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import "./styles/sign_up.css";
-import router from "next/router";
 
 // Define the validation schema with yup
 const schema = yup.object().shape({
@@ -15,12 +16,12 @@ const schema = yup.object().shape({
   password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
   confirmPassword: yup
     .string()
-    .oneOf([yup.ref("password"), null], "Passwords must match")
+    .oneOf([yup.ref("password"), ""], "Passwords must match")
     .required("Confirm Password is required"),
 });
 
 interface IFormInput {
-  name: string;  // Full Name
+  name: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -35,6 +36,7 @@ const SignUpForm: React.FC = () => {
     resolver: yupResolver(schema),
   });
 
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [customError, setCustomError] = useState("");
@@ -45,48 +47,27 @@ const SignUpForm: React.FC = () => {
     setSuccess(false);
     setCustomError("");
 
-    // Prepare data excluding 'confirmPassword'
     const { confirmPassword, ...dataToSend } = data;
-
-    console.log("Data to send:", dataToSend); // Log the data being sent to the backend
 
     try {
       const response = await axios.post("http://localhost:5000/api/auth/signup", {
         ...dataToSend,
-        role: "user", // Set role to user by default
+        role: "user",
       });
+
       if (response.data) {
-        
         setSuccess(true);
-        console.log(response.data); // Log response data
         localStorage.setItem("token", response.data.token);
-        console.log(response.data.token);
         setCustomError("");
-        router.push("/login")
-        setSuccessMessage(response.data)
-      }else{
-        
-        setCustomError("Invalid Credential");
+        router.push("/login");
+        setSuccessMessage("Signup successful!");
+      } else {
+        setCustomError("Invalid credentials");
       }
     } catch (error: any) {
-      console.error("Error response data:", error.response?.data);
       if (axios.isAxiosError(error)) {
-        // Axios-specific error handling
-        console.error("Axios error:", error.message);
-        console.error("Error response data:", error.response?.data);
-
-        if (error.response?.data) {
-          // Specific error message from the backend
-          setCustomError(`${error.response.data.error || "Signup failed"}`);
-        } else {
-          // General error message
-          setCustomError(` ${error.message}`);
-          console.log(error.message);
-          
-        }
+        setCustomError(error.response?.data?.error || error.message);
       } else {
-        // General error handling for non-Axios errors
-        console.error("Non-Axios error:", error);
         setCustomError("An unexpected error occurred. Please try again later.");
       }
     } finally {
@@ -99,14 +80,20 @@ const SignUpForm: React.FC = () => {
       <div className="sign-up-cont">
         <div className="sign-up-content">
           <div className="sign-up-image-cont">
-            <img src="../image/vtu_banner5.jpeg" alt="Banner" className="sign-up-image" />
+            <Image
+              src="/image/vtu_banner5.jpeg"
+              alt="Banner"
+              className="sign-up-image"
+              width={300}
+              height={300}
+            />
           </div>
           <div className="sign-up-form">
             <form onSubmit={handleSubmit(onSubmit)} className="form">
-              {Object.values(errors).length > 0 && (
+              {Object.keys(errors).length > 0 && (
                 <div className="error">
-                  {Object.values(errors).map((err) => (
-                    <p key={err.message}>{err.message}</p>
+                  {(Object.values(errors) as { message?: string }[]).map((err, i) => (
+                    <p key={i}>{err.message}</p>
                   ))}
                 </div>
               )}
@@ -115,37 +102,20 @@ const SignUpForm: React.FC = () => {
                 <h1 className="title">Sign Up</h1>
               </div>
               <center className="display_error">
-
-              {customError && <div className="error">{customError}</div>} 
-             
-              {success && <div className="success">Signup successful!</div>} 
+                {customError && <div className="error">{customError}</div>}
+                {success && <div className="success">{successMessage}</div>}
               </center>
               <div className="form-data">
                 <label htmlFor="name">Full Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  placeholder="Full Name"
-                  {...register("name")}  // Registered field
-                />
+                <input type="text" id="name" placeholder="Full Name" {...register("name")} />
               </div>
               <div className="form-data">
                 <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  placeholder="Email"
-                  {...register("email")}
-                />
+                <input type="email" id="email" placeholder="Email" {...register("email")} />
               </div>
               <div className="form-data">
                 <label htmlFor="password">Password</label>
-                <input
-                  type="password"
-                  id="password"
-                  placeholder="Password"
-                  {...register("password")}
-                />
+                <input type="password" id="password" placeholder="Password" {...register("password")} />
               </div>
               <div className="form-data">
                 <label htmlFor="confirmPassword">Confirm Password</label>
