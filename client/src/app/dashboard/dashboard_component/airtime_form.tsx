@@ -1,8 +1,9 @@
-"use client";
-import React, { useState, useContext } from "react";
+'use client';
+
+import React, { useState } from 'react';
 import "../styles/airtime_form.css";
-import { UserContext } from "../Context/UserContext"; // Adjust path as needed
-import axios from "axios";
+import axios from 'axios';
+import { useUserContext } from '../Context/UserContext'; // Use custom hook
 
 function AirtimeForm() {
   const [networkImage, setNetworkImage] = useState("");
@@ -11,43 +12,23 @@ function AirtimeForm() {
   const [network, setNetwork] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  const context = useContext(UserContext);
+  const { user, setUser } = useUserContext(); // Use the context hook
 
-  if (context === undefined) {
-    throw new Error("useUserContext must be used within a UserProvider");
-  }
-
-  const { user, setUser } = context;
-  
-  
-  // if (!user) {
-  //   console.log(user);
-  //   return <div>Loading...</div>;
-  // }
-
-  const walletBalance = 600;
+  // Fallback or mock if user isn't loaded
+  const walletBalance = user?.wallet?.balance ?? 0;
 
   const handleNetworkChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedNetwork = e.target.value;
     setNetwork(selectedNetwork);
 
-    switch (selectedNetwork) {
-      case "MTN":
-        setNetworkImage("/image/mtn.jpg");
-        break;
-      case "Glo":
-        setNetworkImage("/image/glo.jpg");
-        break;
-      case "Airtel":
-        setNetworkImage("/image/airtel.jpg");
-        break;
-      case "9mobile":
-        setNetworkImage("/image/9mobile.jpg");
-        break;
-      default:
-        setNetworkImage("");
-        break;
-    }
+    const networkImages: { [key: string]: string } = {
+      MTN: "/image/mtn.jpg",
+      Glo: "/image/glo.jpg",
+      Airtel: "/image/airtel.jpg",
+      "9mobile": "/image/9mobile.jpg",
+    };
+
+    setNetworkImage(networkImages[selectedNetwork] || "");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,12 +53,10 @@ function AirtimeForm() {
         mode: "Airtime"
       });
 
-      if (response.status === 200) {
-        // Update user context
+      if (response.status === 200 && response.data.user) {
         setUser(response.data.user);
-
-        setAmount(0); // Reset the amount field
-        setPhone(""); // Reset the phone field
+        setAmount(0);
+        setPhone("");
         setError(null);
       } else {
         setError("Transaction failed");
@@ -101,7 +80,12 @@ function AirtimeForm() {
         </div>
         <div className="form-data">
           <label htmlFor="network">Select Network</label>
-          <select name="network" id="network" onChange={handleNetworkChange} value={network}>
+          <select
+            name="network"
+            id="network"
+            onChange={handleNetworkChange}
+            value={network}
+          >
             <option value="">Choose Network</option>
             <option value="MTN">MTN</option>
             <option value="Airtel">Airtel</option>
