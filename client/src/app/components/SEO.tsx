@@ -1,9 +1,13 @@
-
-
 import Head from 'next/head';
 import { DefaultSeo } from 'next-seo';
 
-const SEO = ({ title, description, canonical }) => {
+interface SEOProps {
+  title: string;
+  description: string;
+  canonical: string;
+}
+
+const SEO = ({ title, description, canonical }: SEOProps) => {
   return (
     <>
       <DefaultSeo
