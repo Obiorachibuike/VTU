@@ -5,11 +5,13 @@ import "../styles/airtime_form.css";
 import axios from 'axios';
 import { useUserContext } from '../Context/UserContext'; // Use custom hook
 
+type NetworkType = 'MTN' | 'Glo' | 'Airtel' | '9mobile';
+
 function AirtimeForm() {
   const [networkImage, setNetworkImage] = useState("");
   const [amount, setAmount] = useState<number>(0);
   const [phone, setPhone] = useState<string>("");
-  const [network, setNetwork] = useState<string>("");
+  const [network, setNetwork] = useState<NetworkType | "">("");
   const [error, setError] = useState<string | null>(null);
 
   const { user, setUser } = useUserContext(); // Use the context hook
@@ -17,18 +19,22 @@ function AirtimeForm() {
   // Fallback or mock if user isn't loaded
   const walletBalance = user?.wallet?.balance ?? 0;
 
+  const networkImages: Record<NetworkType, string> = {
+    MTN: "/image/mtn.jpg",
+    Glo: "/image/glo.jpg",
+    Airtel: "/image/airtel.jpg",
+    "9mobile": "/image/9mobile.jpg",
+  };
+
   const handleNetworkChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedNetwork = e.target.value;
-    setNetwork(selectedNetwork);
+    const selected = e.target.value as NetworkType | "";
+    setNetwork(selected);
 
-    const networkImages: { [key: string]: string } = {
-      MTN: "/image/mtn.jpg",
-      Glo: "/image/glo.jpg",
-      Airtel: "/image/airtel.jpg",
-      "9mobile": "/image/9mobile.jpg",
-    };
-
-    setNetworkImage(networkImages[selectedNetwork] || "");
+    if (selected && selected in networkImages) {
+      setNetworkImage(networkImages[selected as NetworkType]);
+    } else {
+      setNetworkImage("");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
