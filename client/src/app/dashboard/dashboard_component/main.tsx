@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import '../styles/account_details.css';
+// import '../styles/account_details.css';
 
 interface AccountDetailsProps {
   balance: number;
