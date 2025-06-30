@@ -5,7 +5,7 @@ function Call() {
   return (
     <div className="col-lg-5 col-12">
       <div className="custom-block-contact call my-4">
-        <h6 className="mb-4">Still can’t find what you're looking for?</h6>
+        <h6 className="mb-4">Still can&rsquo;t find what you&rsquo;re looking for?</h6>
 
         <p>
           <strong>Call us:</strong>
