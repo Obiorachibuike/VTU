@@ -1,89 +1,134 @@
 'use client';
-import React from "react";
+
+import React, { useState } from "react";
+import axios from "axios";
 import "../styles/pay_bills_form.css";
-import { verify } from "crypto";
-import axios, { Axios } from "axios";
 
 function PaybillsForm() {
+  const [meterNumber, setMeterNumber] = useState("");
+  const [company, setCompany] = useState("");
+  const [meterType, setMeterType] = useState("");
+  const [amount, setAmount] = useState<number>(0);
+  const [verificationResponse, setVerificationResponse] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const verifyMeterNumber = async(e:any) => {
-    console.log(e.target.value);
-    console.log(e);
-    
-    
-      const response = await axios.get(`http://mobilemila.com/vendor/api/checkmeter?username=Obiorachibuike&password=Fanthom456world&meterno=${e.target.value}*****&productid=ibedcprepd`)
-     
-console.log(response);
+  const companyProductMap: Record<string, string> = {
+    "Abuja (AEDC)": "aedcprepaid",
+    "Benin (BEDC)": "bedcprepaid",
+    "Eko (EKEDC)": "ekedcprepaid",
+    "Enugu (EEDC)": "eedcprepaid",
+    "Ibadan (IBEDC)": "ibedcprepaid",
+    "Ikeja (IKEDC)": "ikedcprepaid",
+    "Kaduna (KAEDCO)": "kaedcprepaid",
+    "Kano (KEDCO)": "kedcprepaid",
+    "Portharcourt (PHED)": "phedprepaid",
+  };
 
-    
-  }
+  const verifyMeterNumber = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setMeterNumber(value);
+    setError(null);
+
+    if (!company || !companyProductMap[company]) {
+      setError("Please select a valid electrical company.");
+      return;
+    }
+
+    const productid = companyProductMap[company];
+
+    try {
+      const response = await axios.get(
+        `http://mobilemila.com/vendor/api/checkmeter?username=Obiorachibuike&password=Fanthom456world&meterno=${value}&productid=${productid}`
+      );
+
+      setVerificationResponse(response.data);
+      console.log("Verification response:", response.data);
+    } catch (err) {
+      setError("Failed to verify meter number.");
+      console.error("Verification error:", err);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert("Submitting form... (connect to backend)");
+    // You can send a POST request here to complete the transaction.
+  };
 
   return (
-    <div>
-      <div className="form-cont" style={{ marginTop: 50 + "px" }}>
-        <form
-          action="/dashboard/transactions"
-          className="airtime-form form"
-          method="POST"
-        >
-          <div className="airtime-header-cont">
-            <h1 className="airtime-header">Pay Electrical Bills</h1>
+    <div className="form-cont" style={{ marginTop: "50px" }}>
+      <form onSubmit={handleSubmit} className="airtime-form form">
+        <div className="airtime-header-cont">
+          <h1 className="airtime-header">Pay Electrical Bills</h1>
+        </div>
+
+        <div className="form-data">
+          <label htmlFor="company">Electrical Company</label>
+          <select
+            id="company"
+            required
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+          >
+            <option value="">Choose Electrical Company</option>
+            {Object.keys(companyProductMap).map((comp) => (
+              <option key={comp} value={comp}>{comp}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-data">
+          <label htmlFor="meterType">Meter Type</label>
+          <select
+            id="meterType"
+            required
+            value={meterType}
+            onChange={(e) => setMeterType(e.target.value)}
+          >
+            <option value="">Choose meter type</option>
+            <option value="Prepaid">Prepaid</option>
+            <option value="Postpaid">Postpaid</option>
+          </select>
+        </div>
+
+        <div className="form-data">
+          <label htmlFor="meterNumber">Meter Number</label>
+          <input
+            type="text"
+            required
+            id="meterNumber"
+            placeholder="Enter Meter Number"
+            value={meterNumber}
+            onChange={verifyMeterNumber}
+          />
+        </div>
+
+        <div className="form-data">
+          <label htmlFor="amount">Amount</label>
+          <input
+            type="number"
+            required
+            id="amount"
+            placeholder="Enter Amount"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+          />
+        </div>
+
+        {error && <p className="error-message">{error}</p>}
+
+        {verificationResponse && (
+          <div className="verification-message">
+            <p style={{ color: "green" }}>
+              ✅ Verified: {verificationResponse?.details || "Meter valid"}
+            </p>
           </div>
-          <div className="form-data">
-            <label htmlFor="network">Eletrical Company</label>
-            <select name="Company" id="network" required>
-              <option value="MTN">Choose Electrical Company</option>
-              <option value="MTN">Abuja (AEDC)</option>
-              <option value="MTN">Benin (BEDC)</option>
-              <option value="MTN">Eko (EKEDC)</option>
-              <option value="MTN">Enugu (EEDC)</option>
-              <option value="MTN">Ibadan (IBEDC)</option>
-              <option value="MTN">Ikeja (BEDC)</option>
-              <option value="MTN">Kaduna (KAEDCO)</option>
-              <option value="MTN">Kano (KEDCO)</option>
-              <option value="MTN">Portharcourt (PHED)</option>
-            </select>
-          </div>
-          <div className="form-data">
-            <label htmlFor="network">Meter Type</label>
-            <select
-              name="Company"
-              id="network"
-              required
-              aria-placeholder="choose meter type"
-            >
-              <option value="MTN">Choose meter type</option>
-              <option value="MTN">Prepaid</option>
-              <option value="MTN">Postpaid</option>
-            </select>
-          </div>
-            <div className="form-data">
-              <label htmlFor="price">Meter Number</label>
-              <input
-                type="number"
-                required
-                name="decoder_no"
-                id="price"
-                placeholder="Enter Meter Number"
-                onChange={verifyMeterNumber}
-              />
-          <div className="form-data">
-            <label htmlFor="price">Amount</label>
-            <input
-              type="number"
-              required
-              name="amount"
-              id="price"
-              placeholder="Enter Ampunt"
-            />
-          </div>
-            <p className="error_message">MTN</p>
-          </div>
-          <div className="form-btn">
-            <input type="submit" value="Subscribe" className="submit" />
-          </div>
-        </form>
-      </div>
+        )}
+
+        <div className="form-btn">
+          <input type="submit" value="Subscribe" className="submit" />
+        </div>
+      </form>
     </div>
   );
 }
