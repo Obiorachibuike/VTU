@@ -26,7 +26,7 @@ function AdminLoginForm() {
       } else {
         setError("Login failed. Please check your credentials and try again.");
       }
-    } catch (error: any) {
+    } catch (error) {
       setError(error.response?.data?.error || "Login failed. Please try again.");
     }
   };
