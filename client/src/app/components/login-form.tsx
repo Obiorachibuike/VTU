@@ -28,34 +28,25 @@ function LoginForm() {
     resolver: yupResolver(schema),
   });
 
-  const { setUser, setIsAuthenticated,user,fetchUserDetails } = useUserContext();
+  const { setUser, setIsAuthenticated, fetchUserDetails } = useUserContext();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     setIsLoading(true);
     try {
-      // Send login request to the server
       const response = await axios.post("http://localhost:5000/api/auth/login", {
         email: data.email,
         password: data.password,
         role: "user",
       });
-      // console.log(response.data.jwtToken)
 
       if (response.status === 200) {
-        // Store user data and token
-        // setUser(response.data.user);
         const token = response.data.jwtToken;
-        // console.log(user);
-        fetchUserDetails(token)
-        
-        // Set token in HttpOnly cookie (assuming backend handles this)
-        document.cookie = `authToken=${token}; path=/; secure; SameSite=Strict`;
+        fetchUserDetails(token);
 
-        // Set authentication state
+        document.cookie = `authToken=${token}; path=/; secure; SameSite=Strict`;
         setIsAuthenticated(true);
-        // Redirect to dashboard
         router.push("/dashboard");
       } else {
         alert("Login failed. Please try again.");
@@ -117,7 +108,7 @@ function LoginForm() {
                 </button>
               </div>
               <center>
-                Don't have an account? <Link href="/sign_up">Sign up</Link>
+                Don&apos;t have an account? <Link href="/sign_up">Sign up</Link>
               </center>
             </form>
           </div>
