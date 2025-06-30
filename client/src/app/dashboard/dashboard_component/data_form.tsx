@@ -3,10 +3,19 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import "../styles/data_form.css";
-import { useUserContext } from '../Context/UserContext'; // ✅ Use hook instead of direct context
+import { useUserContext } from '../Context/UserContext';
 
-// Define plans for each network
-const networkPlans = {
+// Network and Plan Types
+type NetworkType = 'MTN' | 'Glo' | 'Airtel' | '9mobile';
+
+interface Plan {
+  value: string;
+  label: string;
+  price: number;
+}
+
+// Define plans with proper typing
+const networkPlans: Record<NetworkType, Plan[]> = {
   MTN: [
     { value: "mtn_plan1", label: "MTN Plan 1", price: 265 },
     { value: "mtn_plan2", label: "MTN Plan 2", price: 500 },
@@ -25,41 +34,40 @@ const networkPlans = {
   ],
 };
 
-function DataForm() {
-  const [networkImage, setNetworkImage] = useState("");
-  const [selectedNetwork, setSelectedNetwork] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState("");
-  const [plans, setPlans] = useState<{ value: string; label: string; price: number }[]>([]);
+const DataForm: React.FC = () => {
+  const [networkImage, setNetworkImage] = useState<string>("");
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkType | "">("");
+  const [selectedPlan, setSelectedPlan] = useState<string>("");
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [amount, setAmount] = useState<number>(0);
   const [phone, setPhone] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  const { user, setUser } = useUserContext(); // ✅ Get user and setUser from context
-
+  const { user, setUser } = useUserContext();
   const walletBalance = user?.wallet?.balance ?? 0;
 
+  const networkImages: Record<NetworkType, string> = {
+    MTN: "/image/mtn.jpg",
+    Glo: "/image/glo.jpg",
+    Airtel: "/image/airtel.jpg",
+    "9mobile": "/image/9mobile.jpg",
+  };
+
   const handleNetworkChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const network = e.target.value;
-    setSelectedNetwork(network);
+    const value = e.target.value as NetworkType;
+    setSelectedNetwork(value);
 
-    const networkImages: { [key: string]: string } = {
-      MTN: "/image/mtn.jpg",
-      Glo: "/image/glo.jpg",
-      Airtel: "/image/airtel.jpg",
-      "9mobile": "/image/9mobile.jpg",
-    };
-
-    setNetworkImage(networkImages[network] || "");
-
-    setPlans(networkPlans[network] || []);
+    setNetworkImage(networkImages[value] || "");
+    setPlans(networkPlans[value] || []);
     setSelectedPlan("");
+    setAmount(0);
   };
 
   const handlePlanChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const plan = e.target.value;
-    const selectedPlanData = networkPlans[selectedNetwork]?.find(p => p.value === plan);
-    setSelectedPlan(plan);
-    setAmount(selectedPlanData?.price || 0);
+    const planValue = e.target.value;
+    const selected = plans.find(p => p.value === planValue);
+    setSelectedPlan(planValue);
+    setAmount(selected?.price || 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,16 +92,16 @@ function DataForm() {
       });
 
       if (response.status === 200 && response.data.user) {
-        setUser(response.data.user); // ✅ Update user context
+        setUser(response.data.user);
         setAmount(0);
         setPhone("");
         setError(null);
       } else {
         setError("Transaction failed");
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Transaction failed", err);
       setError("Transaction failed");
-      console.error("Error submitting transaction", error);
     }
   };
 
@@ -166,6 +174,6 @@ function DataForm() {
       </form>
     </div>
   );
-}
+};
 
 export default DataForm;
