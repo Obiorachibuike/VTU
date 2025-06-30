@@ -8,11 +8,14 @@ import FaqBanner from '../components/faq-banner'
 function FAQ() {
   return (
     <div>
+{*
     //    <SEO
     //     title="FAQ Page"
     //     description="Recharge your Data,Airtime,Tv Subscription,etc at Cheap,Affordable and Fast Rate"
     //     canonical="http://localhost:3000/FAQ"
     //   />
+
+*}
        <Header />
         <FaqBanner />
         <Faq />
