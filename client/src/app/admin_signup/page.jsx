@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import axios from "axios";
-import "./styles/sign_up.css";
+import "../components/styles/sign_up.css";
 
 // Define the validation schema with yup
 const schema = yup.object().shape({
