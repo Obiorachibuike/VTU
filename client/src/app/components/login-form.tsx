@@ -6,7 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Link from "next/link";
 import Image from "next/image";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import { useUserContext } from "../dashboard/Context/UserContext";
 import { useRouter } from 'next/navigation';
 
@@ -52,7 +52,11 @@ function LoginForm() {
         alert("Login failed. Please try again.");
       }
     } catch (error) {
-      alert(`Error: ${error.response?.data?.error || "Login failed"}`);
+      if (isAxiosError(error)) {
+        alert(`Error: ${error.response?.data?.error || "Login failed"}`);
+      } else {
+        alert("An unexpected error occurred.");
+      }
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
