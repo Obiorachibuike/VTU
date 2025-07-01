@@ -1,3 +1,6 @@
+'use client';
+import React, { useState } from 'react';
+
 interface WalletComponentProps {
   balance: number;
 }
@@ -5,12 +8,22 @@ interface WalletComponentProps {
 const WalletComponent: React.FC<WalletComponentProps> = ({ balance }) => {
   const [activeWallet, setActiveWallet] = useState<string>('cash-wallet');
 
+  const switchWalletTab = (wallet: string) => {
+    setActiveWallet(wallet);
+  };
+
   return (
     <div className="row wallet-row">
+      {/* Wallet Balance Card */}
       <div className="col-12 col-xl-4 wallet">
         <div className="card bg-dark text-white">
           <div className="card-header">
             <h2 className="card-title text-white">Wallet</h2>
+            {/* Uncomment to allow wallet tab switching */}
+            {/* <div className="heading-elements mt-3 mt-md-0">
+              <button onClick={() => switchWalletTab('cash-wallet')}>Cash Wallet</button>
+              <button onClick={() => switchWalletTab('crypto-wallet')}>Crypto Wallet</button>
+            </div> */}
           </div>
           <div className="card-content">
             <div
@@ -50,6 +63,20 @@ const WalletComponent: React.FC<WalletComponentProps> = ({ balance }) => {
           </div>
         </div>
       </div>
+
+      {/* Uncomment this for future stats */}
+      {/* <div className="col-12 col-xl-3">
+        <div className="card bg-dark text-white">
+          <div className="card-header">
+            <h2 className="card-title">Total Lifetime Transactions</h2>
+          </div>
+          <div className="card-content">
+            <div className="card-body">
+              <h1>24,532.00 NGN</h1>
+            </div>
+          </div>
+        </div>
+      </div> */}
     </div>
   );
 };
