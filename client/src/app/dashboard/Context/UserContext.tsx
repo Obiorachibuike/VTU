@@ -1,17 +1,32 @@
 'use client';
 
 import axios from 'axios';
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 
 interface Wallet {
   balance: number;
   currency: string;
 }
 
-interface User {
+export interface AccountTransaction {
+  _id?: string;
+  amount: number;
+  type: 'credit' | 'debit';
+  status: string;
+  description?: string;
+  date?: string;
+  time?: string;
+  reference?: string;
+  category?: string;
+  mode?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface User {
   name: string;
   email: string;
-  transactions: any[];
+  role?: string;
+  transactions: AccountTransaction[];
   wallet: Wallet;
   referralCode: string;
   referralCount: number;
@@ -23,7 +38,7 @@ interface UserContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
   isLoading: boolean;
-  fetchUserDetails: (token: string) => void;
+  fetchUserDetails: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -33,33 +48,30 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const fetchUserDetails = async (token: string) => {
+  const fetchUserDetails = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/auth/user/details', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get('/api/auth/user/details', { withCredentials: true });
 
       if (response.status === 200 && response.data.user) {
         setUser(response.data.user);
         setIsAuthenticated(true);
       } else {
-        alert('Failed to fetch user details. Please try again.');
         setIsAuthenticated(false);
       }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        alert(`Error: ${error.response?.data?.error || error.message}`);
-      } else {
-        alert('An unexpected error occurred while fetching user details.');
-      }
+      setUser(null);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    void fetchUserDetails();
+    // Cookie-based session is checked once when the app loads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <UserContext.Provider

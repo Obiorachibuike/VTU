@@ -7,7 +7,6 @@ import Footer from './components/footer'; // Import Footer component
 import Header from './components/header'; // Import Header component
 import Offer from './components/offer'; // Import Offer component (although not used in this code snippet)
 import Reason from './components/reason'; // Import Reason component
-import SEO from './components/SEO'; // Import SEO component
 import { UserProvider } from './dashboard/Context/UserContext'; // Import UserProvider from UserContext
 import { ThemeProvider } from './dashboard/Context/ThemeContext';
 

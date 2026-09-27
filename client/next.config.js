@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
+const backend = process.env.API_PROXY_TARGET || 'http://127.0.0.1:5000';
 const nextConfig = {
-    // async rewrites() {
-    //     return [
-    //         source,'/api/user',
-    //         destination, "http://localhost:5001/api/user"
-    //     ]
-    // }
-}
+  allowedDevOrigins: ['*.e2b.app'],
+  async rewrites() {
+    return [{ source: '/api/:path*', destination: `${backend}/api/:path*` }];
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
