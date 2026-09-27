@@ -13,7 +13,7 @@ import "./styles/sign_up.css";
 const schema = yup.object().shape({
   name: yup.string().required("Full Name is required"),
   email: yup.string().email("Invalid email format").required("Email is required"),
-  password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
+  password: yup.string().min(12, "Password must be at least 12 characters").required("Password is required"),
   confirmPassword: yup
     .string()
     .oneOf([yup.ref("password"), ""], "Passwords must match")
@@ -47,24 +47,22 @@ const SignUpForm: React.FC = () => {
     setSuccess(false);
     setCustomError("");
 
-    const { confirmPassword, ...dataToSend } = data;
-
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/signup", {
-        ...dataToSend,
-        role: "user",
+      const response = await axios.post("/api/auth/signup", {
+        name: data.name,
+        email: data.email,
+        password: data.password,
       });
 
       if (response.data) {
         setSuccess(true);
-        localStorage.setItem("token", response.data.token);
         setCustomError("");
         router.push("/login");
         setSuccessMessage("Signup successful!");
       } else {
         setCustomError("Invalid credentials");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         setCustomError(error.response?.data?.error || error.message);
       } else {

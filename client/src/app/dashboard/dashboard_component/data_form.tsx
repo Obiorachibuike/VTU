@@ -17,20 +17,17 @@ interface Plan {
 // Define plans with proper typing
 const networkPlans: Record<NetworkType, Plan[]> = {
   MTN: [
-    { value: "mtn_plan1", label: "MTN Plan 1", price: 265 },
-    { value: "mtn_plan2", label: "MTN Plan 2", price: 500 },
+    { value: "mtn_1gb", label: "1 GB", price: 500 },
+    { value: "mtn_2gb", label: "2 GB", price: 1000 },
   ],
   Glo: [
-    { value: "glo_plan1", label: "Glo Plan 1", price: 300 },
-    { value: "glo_plan2", label: "Glo Plan 2", price: 600 },
+    { value: "glo_1gb", label: "1 GB", price: 500 },
   ],
   Airtel: [
-    { value: "airtel_plan1", label: "Airtel Plan 1", price: 350 },
-    { value: "airtel_plan2", label: "Airtel Plan 2", price: 700 },
+    { value: "airtel_1gb", label: "1 GB", price: 500 },
   ],
   "9mobile": [
-    { value: "9mobile_plan1", label: "9mobile Plan 1", price: 400 },
-    { value: "9mobile_plan2", label: "9mobile Plan 2", price: 800 },
+    { value: "9mobile_1gb", label: "1 GB", price: 500 },
   ],
 };
 
@@ -42,6 +39,8 @@ const DataForm: React.FC = () => {
   const [amount, setAmount] = useState<number>(0);
   const [phone, setPhone] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const { user, setUser } = useUserContext();
   const walletBalance = user?.wallet?.balance ?? 0;
@@ -73,6 +72,11 @@ const DataForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!selectedNetwork || !selectedPlan || !/^0\d{10}$/.test(phone)) {
+      setError("Choose a network and plan, and enter a valid 11-digit phone number");
+      return;
+    }
+
     if (amount <= 0) {
       setError("Amount must be greater than zero");
       return;
@@ -84,16 +88,18 @@ const DataForm: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('/transaction/update_balance', {
-        network: selectedNetwork,
-        amount,
-        phone,
-        mode: "debit"
+      setBusy(true);
+      setError(null);
+      setNotice(null);
+      const response = await axios.post('/api/services/purchase', {
+        service: "data", network: selectedNetwork, amount, recipient: phone, productCode: selectedPlan
       });
 
-      if (response.status === 200 && response.data.user) {
-        setUser(response.data.user);
+      if ((response.status === 200 || response.status === 201) && response.data.wallet) {
+        if (user) setUser({ ...user, wallet: response.data.wallet, transactions: response.data.transactions || user.transactions });
+        setNotice(response.data.message || 'Order submitted.');
         setAmount(0);
+        setSelectedPlan("");
         setPhone("");
         setError(null);
       } else {
@@ -101,7 +107,9 @@ const DataForm: React.FC = () => {
       }
     } catch (err) {
       console.error("Transaction failed", err);
-      setError("Transaction failed");
+      setError(axios.isAxiosError(err) ? (err.response?.data?.error || "Transaction failed") : "Transaction failed");
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -167,9 +175,10 @@ const DataForm: React.FC = () => {
             onChange={(e) => setPhone(e.target.value)}
           />
         </div>
-        {error && <p className="error-message">{error}</p>}
+        {error && <p className="error-message" role="alert">{error}</p>}
+        {notice && <p role="status">{notice}</p>}
         <div className="form-btn">
-          <input type="submit" value="Buy" className="submit" />
+          <input type="submit" value={busy ? "Processing…" : "Buy"} className="submit" disabled={busy} />
         </div>
       </form>
     </div>

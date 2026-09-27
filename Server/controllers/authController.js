@@ -13,8 +13,7 @@ const sendMail = require('../utils/nodeMailer.js');
 const signup = [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
-  body('role').optional().isIn(['admin', 'user']).withMessage('Role must be admin or user'),
+  body('password').isLength({ min: 12 }).withMessage('Password must be at least 12 characters long'),
   
   async (req, res) => {
     const errors = validationResult(req);
@@ -22,7 +21,7 @@ const signup = [
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const { name, email, password, role = 'user' } = req.body; // Default role to 'user'
+    const { name, email, password } = req.body; // Public signup never grants privileged roles.
     const referralCode = req.query.referral; // Get referral code from query parameters
     
     try {
@@ -33,7 +32,7 @@ const signup = [
       }
       
       // Create and save new user
-      const user = new User({ name, email, password, role });
+      const user = new User({ name, email, password, role: 'user' });
       const verificationToken = user.generateVerificationToken(); // Generate and get the token
       await user.save();
 
@@ -46,7 +45,7 @@ const signup = [
       }
 
       // Send verification email
-      sendMail(email, verificationToken);
+      await sendMail(email, verificationToken);
 
       res.status(201).json({ message: 'User created successfully. Please verify your email.' });
     } catch (error) {
@@ -92,7 +91,6 @@ const login = [
 
       // Generate JWT token
       const token = user.generateToken();
-      console.log('Generated token:', token);
 
       // Save the new token in the user's record
       user.jwtToken = token;
@@ -105,11 +103,11 @@ const login = [
       res.cookie('authToken', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'Strict',
+        sameSite: 'Lax',
       });
 
-      // Return the token in the response
-      res.json({ jwtToken: token });
+      // Keep the JWT in an HTTP-only cookie; never return it to browser JavaScript.
+      res.json({ message: 'Signed in successfully.' });
 
     } catch (error) {
       console.error('Error during login:', error.message);
@@ -129,14 +127,12 @@ const login = [
 // Verify Email
 const verifyEmail = async (req, res) => {
   const { token } = req.query;
-  console.log(token);
   
 
   try {
     if (typeof token === 'string') {
       // Find user with the provided verification token
       const user = await User.findOne({ verificationToken: token });
-      console.log(user);
       
 
       if (!user) {
@@ -163,51 +159,19 @@ const verifyEmail = async (req, res) => {
 
 const fetchUserDetails = async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Get the token from the "Authorization" header
-    console.log(req)
-// console.log(jwt.verify(token, process.env.JWT_SECRET));
-
-
-    if (!token) {
-      return res.status(401).json({ error: 'Token is required' });
-    }
-    
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Use your JWT secret
-    //  console.log(decoded);
-     
-    // Find the user by email from token
+    const token = req.cookies?.authToken;
+    if (!token) return res.status(401).json({ error: 'Authentication required.' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
-
-    // console.log(user);
-    
-    // console.log('Stored token:', user.jwtToken);
-    // console.log('Incoming token:', token);
-    
-    if (!user || user.jwtToken !== token) { // Check if token matches the stored token
-      return res.status(403).json({ error: 'Invalid or expired token' });
-    }
-
-    // Return the user details
-    res.json({
-      user: {
-        name: user.name,
-        email: user.email,
-        transactions: user.transactions,
-        notifications: user.notifications,
-        wallet: {
-          balance: user.wallet.balance,
-          currency: user.wallet.currency, // Including currency if needed
-        },
-        referralCode: user.referralCode,
-        referralCount: user.referralCount,
-      },
-    });
-
+    if (!user || user.jwtToken !== token) return res.status(401).json({ error: 'Invalid or expired session.' });
+    res.json({ user: {
+      name: user.name, email: user.email, role: user.role,
+      transactions: user.transactions.slice(-100).reverse(), notifications: user.notifications,
+      wallet: { balance: user.wallet.balance, currency: user.wallet.currency },
+      referralCode: user.referralCode, referralCount: user.referralCount,
+    } });
   } catch (error) {
-    console.error('Error fetching user details:', error.message);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(401).json({ error: 'Invalid or expired session.' });
   }
 };
 
@@ -219,5 +183,18 @@ const fetchUserDetails = async (req, res) => {
 
 
 
+const logout = async (req, res) => {
+  try {
+    const token = req.cookies?.authToken;
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      await User.updateOne({ _id: decoded.id, jwtToken: token }, { $unset: { jwtToken: 1 } });
+    }
+  } catch (_) {
+    // Clear stale/expired cookies too.
+  }
+  res.clearCookie('authToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Lax' });
+  res.json({ message: 'Signed out.' });
+};
 
-module.exports = { signup, login, verifyEmail,fetchUserDetails };
+module.exports = { signup, login, verifyEmail, fetchUserDetails, logout };

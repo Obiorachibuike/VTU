@@ -15,7 +15,7 @@ import "./styles/login-form.css";
 // Define validation schema using yup
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email format").required("Email is required"),
-  password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
+  password: yup.string().min(12, "Password must be at least 12 characters").required("Password is required"),
 });
 
 interface LoginFormInputs {
@@ -28,24 +28,21 @@ function LoginForm() {
     resolver: yupResolver(schema),
   });
 
-  const { setUser, setIsAuthenticated, fetchUserDetails } = useUserContext();
+  const { setIsAuthenticated, fetchUserDetails } = useUserContext();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     setIsLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/login", {
+      const response = await axios.post("/api/auth/login", {
         email: data.email,
         password: data.password,
         role: "user",
       });
 
       if (response.status === 200) {
-        const token = response.data.jwtToken;
-        fetchUserDetails(token);
-
-        document.cookie = `authToken=${token}; path=/; secure; SameSite=Strict`;
+        await fetchUserDetails();
         setIsAuthenticated(true);
         router.push("/dashboard");
       } else {

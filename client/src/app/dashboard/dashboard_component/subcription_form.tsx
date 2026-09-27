@@ -1,125 +1,31 @@
-"use client";
-import React, { useState } from "react";
-import "../styles/subcription_form.css";
+'use client';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useUserContext } from '../Context/UserContext';
+import '../styles/subcription_form.css';
 
-interface Plan {
-  label: string;
-  value: string;
-}
-
-const cablePlans: Record<string, Plan[]> = {
-  DSTV: [
-    { label: "DSTV Padi - ₦2500", value: "dstv_padi" },
-    { label: "DSTV Yanga - ₦3700", value: "dstv_yanga" },
-  ],
-  GoTV: [
-    { label: "GoTV Smallie - ₦1200", value: "gotv_smallie" },
-    { label: "GoTV Jolli - ₦2460", value: "gotv_jolli" },
-  ],
-  StarTimes: [
-    { label: "Nova - ₦900", value: "startimes_nova" },
-    { label: "Basic - ₦1700", value: "startimes_basic" },
-  ],
-};
-
-function SubcriptionForm() {
-  const [networkImage, setNetworkImage] = useState("");
-  const [selectedCable, setSelectedCable] = useState("");
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [selectedPlan, setSelectedPlan] = useState("");
-  const [decoderNumber, setDecoderNumber] = useState("");
-
-  const handleCableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const cable = e.target.value;
-    setSelectedCable(cable);
-
-    switch (cable) {
-      case "DSTV":
-        setNetworkImage("/image/DSTV.jpg");
-        break;
-      case "GoTV":
-        setNetworkImage("/image/GoTV.jpg");
-        break;
-      case "StarTimes":
-        setNetworkImage("/image/startimes.jpeg");
-        break;
-      default:
-        setNetworkImage("");
-    }
-
-    setPlans(cablePlans[cable] || []);
-    setSelectedPlan("");
+type Plan = { code: string; network: string; label: string; price: number };
+export default function SubscriptionForm() {
+  const { user, setUser } = useUserContext();
+  const [plans, setPlans] = useState<Plan[]>([]); const [provider, setProvider] = useState(''); const [productCode, setProductCode] = useState('');
+  const [decoder, setDecoder] = useState(''); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState(false);
+  useEffect(() => { axios.get('/api/services/catalog').then(({ data }) => setPlans(data.tv || [])).catch(() => setError('Could not load TV packages.')); }, []);
+  const selected = plans.find(plan => plan.code === productCode);
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault(); setError(''); setNotice(''); setBusy(true);
+    try {
+      const { data } = await axios.post('/api/services/purchase', { service: 'tv', productCode, recipient: decoder });
+      setNotice(data.message); if (user) setUser({ ...user, wallet: data.wallet, transactions: data.transactions || user.transactions });
+      setProductCode(''); setDecoder('');
+    } catch (err) { setError(axios.isAxiosError(err) ? err.response?.data?.error || 'Subscription failed.' : 'Subscription failed.'); }
+    finally { setBusy(false); }
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Replace with your backend integration
-    alert(`Subscribing to ${selectedCable} plan ${selectedPlan} for decoder: ${decoderNumber}`);
-  };
-
-  return (
-    <div className="form-cont" style={{ marginTop: "50px" }}>
-      <form onSubmit={handleSubmit} className="airtime-form form">
-        <div className="airtime-header-cont">
-          <h1 className="airtime-header">Recharge Cables</h1>
-        </div>
-
-        <div className="network-cont">
-          {networkImage && (
-            <img src={networkImage} alt="Cable Logo" className="network" />
-          )}
-        </div>
-
-        <div className="form-data">
-          <label htmlFor="cable">Select Cable</label>
-          <select id="cable" value={selectedCable} onChange={handleCableChange} required>
-            <option value="">Choose Cable</option>
-            <option value="GoTV">GoTV</option>
-            <option value="DSTV">DSTV</option>
-            <option value="StarTimes">StarTimes</option>
-          </select>
-        </div>
-
-        <div className="form-data">
-          <label htmlFor="plan">Select Plan</label>
-          <select
-            id="plan"
-            value={selectedPlan}
-            onChange={(e) => setSelectedPlan(e.target.value)}
-            required
-            disabled={plans.length === 0}
-          >
-            <option value="">Choose Plan</option>
-            {plans.map((plan) => (
-              <option key={plan.value} value={plan.value}>
-                {plan.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-data">
-          <label htmlFor="decoder">Decoder Number</label>
-          <input
-            type="text"
-            id="decoder"
-            name="decoder"
-            required
-            placeholder="Enter Decoder Number"
-            value={decoderNumber}
-            onChange={(e) => setDecoderNumber(e.target.value)}
-            pattern="[0-9]{6,20}"
-            maxLength={20}
-          />
-        </div>
-
-        <div className="form-btn">
-          <input type="submit" value="Subscribe" className="submit" />
-        </div>
-      </form>
-    </div>
-  );
+  const providers = Array.from(new Set(plans.map(plan => plan.network)));
+  return <div className="form-cont" style={{ marginTop: 50 }}><form onSubmit={submit} className="airtime-form form"><div className="airtime-header-cont"><h1 className="airtime-header">TV subscription</h1></div>
+    <div className="form-data"><label htmlFor="tv-provider">TV provider</label><select id="tv-provider" value={provider} onChange={e => { setProvider(e.target.value); setProductCode(''); }} required><option value="">Choose provider</option>{providers.map(item => <option key={item}>{item}</option>)}</select></div>
+    <div className="form-data"><label htmlFor="tv-plan">Package</label><select id="tv-plan" value={productCode} onChange={e => setProductCode(e.target.value)} required disabled={!provider}><option value="">Choose package</option>{plans.filter(plan => plan.network === provider).map(plan => <option key={plan.code} value={plan.code}>{plan.label} — ₦{plan.price.toLocaleString()}</option>)}</select></div>
+    {selected && <p>Charge: <strong>₦{selected.price.toLocaleString()}</strong></p>}
+    <div className="form-data"><label htmlFor="decoder-number">Smartcard / decoder number</label><input id="decoder-number" required inputMode="numeric" pattern="[0-9]{6,20}" maxLength={20} value={decoder} onChange={e => setDecoder(e.target.value)} placeholder="Enter decoder number" /></div>
+    {error && <p className="error-message" role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}<div className="form-btn"><button type="submit" className="submit" disabled={busy}>{busy ? 'Processing…' : 'Pay from wallet'}</button></div>
+  </form></div>;
 }
-
-export default SubcriptionForm;

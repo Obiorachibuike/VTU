@@ -1,100 +1,65 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
-const path = require('path');
-const fs = require('fs');
-const db =  require('./utils/db.js')
-const data = require('./cars.json')
-const authRoutes = require('./routes/authRoutes');
-const carRoutes = require('./routes/carRoutes');
-const Car = require('./models/CarSchema.js'); // Ensure this path matches your actual file
-const UserSchema = require('./models/UserSchema.js');
-const deleteAllUsers = require('./utils/remove.js');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-// const secretKey = require('./utils/secreteKey.js')
+const db = require('./utils/db.js');
+const authRoutes = require('./routes/authRoutes');
+const carRoutes = require('./routes/carRoutes');
+const walletRoutes = require('./routes/walletRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
+const flightRoutes = require('./routes/flightRoutes');
+const { paystackWebhook } = require('./controllers/walletController');
 require('dotenv').config();
 
-// secretKey
-
 const app = express();
+app.disable('x-powered-by');
+if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1);
 app.use(cookieParser());
-
-// CORS configuration
-const corsOptions = {
-  origin: "http://localhost:3000", // Replace with your frontend URL
-  methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type,Authorization",
-  credentials: true, // Allows cookies to be sent
-};
-
-// Session management
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || origin === (process.env.FRONTEND_URL || 'http://localhost:3000') || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || /^https:\/\/[a-zA-Z0-9-]+\.e2b\.app$/.test(origin)) return callback(null, true);
+    return callback(new Error('Origin is not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
+app.use(express.json({ limit: '32kb', verify: (req, res, buffer) => { req.rawBody = Buffer.from(buffer); } }));
 app.use(session({
-  secret: process.env.SECRET_KEY, // Change to a secure secret
+  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || 'development-only-session-secret-change-this',
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    httpOnly: true, // Prevent access via JavaScript
-    secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-    sameSite: 'Strict', // Restrict cookies to first-party context
-  }
+  cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' },
 }));
 
+app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'SubHub247 API' }));
+app.post('/api/payments/paystack/webhook', paystackWebhook);
+app.use('/api/auth', authRoutes);
+app.use('/api/cars', carRoutes); // Legacy/demo catalog API retained for compatibility.
+app.use('/api/wallet', walletRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/flights', flightRoutes);
 
-
-// Middleware
-app.use(cors(corsOptions));
-app.use(express.json());
-
-// Error handling middleware
+app.use((req, res) => res.status(404).json({ error: 'Route not found.' }));
 app.use((err, req, res, next) => {
-  console.error(err.message); // Log error message
-  res.status(500).json({ error: err.message || 'An unexpected error occurred' });
+  console.error('Unhandled API error:', err.message);
+  res.status(err.status || 500).json({ error: err.status && err.status < 500 ? err.message : 'An unexpected server error occurred.' });
 });
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/cars', carRoutes);
-
-// Function to import data
-const importData = async () => {
-  try {
-    // Check if data already exists
-    const carCount = await Car.countDocuments();
-    if (carCount > 0) {
-      console.log('Data already exists, skipping import.');
-      return;
-    }
-
-    // Read and parse the JSON file
-    // const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'cars.json'), 'utf-8'));
-    
-
-    // Import the data into MongoDB
-    await Car.insertMany(data);
-
-    console.log('Data imported successfully');
-  } catch (error) {
-    console.error('Error importing data:', error);
-  }
-};
-
-// Connect to MongoDB
-// mongoose.connect(process.env.MONGO_URI, {
-  //   useNewUrlParser: true,
-  //   useUnifiedTopology: true
-// })
-//   .then(() => {
-  //     console.log('Connected to MongoDB');
-  //     // Import data after successful connection
-//     importData();
-//   })
-//   .catch(err => console.error('Error connecting to MongoDB', err));
-
-
-db.connection()
-
-// deleteAllUsers()
-
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+async function start() {
+  if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || !process.env.SESSION_SECRET)) {
+    throw new Error('JWT_SECRET and SESSION_SECRET must be configured before production startup.');
+  }
+  await db.connection();
+  app.listen(PORT, '0.0.0.0', () => console.log(`SubHub247 API listening on port ${PORT}`));
+}
+
+if (require.main === module) {
+  start().catch(error => {
+    console.error('API startup failed:', error.message);
+    process.exit(1);
+  });
+}
+
+module.exports = app;

@@ -1,0 +1,10 @@
+const express = require('express');
+const { authenticateUser, authenticateAdmin } = require('../middleware/authMiddleware');
+const asyncHandler = require('../middleware/asyncHandler');
+const { getCatalog, purchase, listPending, resolvePending } = require('../controllers/serviceController');
+const router = express.Router();
+router.get('/catalog', getCatalog);
+router.post('/purchase', authenticateUser, asyncHandler(purchase));
+router.get('/admin/pending', authenticateAdmin, asyncHandler(listPending));
+router.patch('/admin/pending/:userId/:reference', authenticateAdmin, asyncHandler(resolvePending));
+module.exports = router;

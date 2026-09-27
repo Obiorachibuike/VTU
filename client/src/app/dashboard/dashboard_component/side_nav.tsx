@@ -42,6 +42,18 @@ const SideNav = () => {
             </Link>
           </li>
           <li>
+            <Link href="/dashboard/wallet">
+              <FontAwesomeIcon className="uil uil-share nav-icons" icon={faShare} />
+              <span className={`link-name ${theme}`}>Wallet</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/dashboard/flights">
+              <FontAwesomeIcon className="uil uil-share nav-icons" icon={faShare} />
+              <span className={`link-name ${theme}`}>Flights</span>
+            </Link>
+          </li>
+          <li>
             <Link href="/dashboard/airtime">
               <FontAwesomeIcon
                 className="uil uil-files-landscapes nav-icons"
@@ -100,10 +112,10 @@ const SideNav = () => {
 
         <ul className="logout-mode">
           <li>
-            <Link href="/">
+            <a href="/login" onClick={async (event) => { event.preventDefault(); try { await axios.post('/api/auth/logout'); } finally { window.location.assign('/login'); } }}>
               <i className="uil uil-signout"></i>
               <span className={`link-name ${theme}`}>Logout</span>
-            </Link>
+            </a>
           </li>
 
           <li className="mode">

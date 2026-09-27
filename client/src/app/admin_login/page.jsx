@@ -6,24 +6,22 @@ import Image from "next/image";
 import "../components/styles/login-form.css";
 
 function AdminLoginForm() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/login", {
+      const response = await axios.post("/api/auth/login", {
         email,
         password,
       });
 
       if (response.status === 200) {
-        const data = response.data;
-        localStorage.setItem("token", data.token);
-        window.location.href = "/home";
+        window.location.href = "/admin";
       } else {
         setError("Login failed. Please check your credentials and try again.");
       }

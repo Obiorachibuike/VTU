@@ -13,6 +13,8 @@ function AirtimeForm() {
   const [phone, setPhone] = useState<string>("");
   const [network, setNetwork] = useState<NetworkType | "">("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const { user, setUser } = useUserContext(); // Use the context hook
 
@@ -40,8 +42,13 @@ function AirtimeForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (amount <= 0) {
-      setError("Amount must be greater than zero");
+    if (!network || !/^0\d{10}$/.test(phone)) {
+      setError("Choose a network and enter a valid 11-digit Nigerian phone number");
+      return;
+    }
+
+    if (amount < 50) {
+      setError("Amount must be at least ₦50");
       return;
     }
 
@@ -51,16 +58,19 @@ function AirtimeForm() {
     }
 
     try {
-      const response = await axios.post('/transaction/update_balance', {
+      setBusy(true);
+      setError(null);
+      setNotice(null);
+      const response = await axios.post('/api/services/purchase', {
         network,
         amount,
-        phone,
-        type: "debit",
-        mode: "Airtime"
+        recipient: phone,
+        service: "airtime"
       });
 
-      if (response.status === 200 && response.data.user) {
-        setUser(response.data.user);
+      if ((response.status === 200 || response.status === 201) && response.data.wallet) {
+        if (user) setUser({ ...user, wallet: response.data.wallet, transactions: response.data.transactions || user.transactions });
+        setNotice(response.data.message || 'Order submitted.');
         setAmount(0);
         setPhone("");
         setError(null);
@@ -68,8 +78,10 @@ function AirtimeForm() {
         setError("Transaction failed");
       }
     } catch (error) {
-      setError("Transaction failed");
+      setError(axios.isAxiosError(error) ? (error.response?.data?.error || "Transaction failed") : "Transaction failed");
       console.error("Error submitting transaction", error);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -109,7 +121,7 @@ function AirtimeForm() {
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
             required
-            min={100}
+            min={50}
           />
         </div>
         <div className="form-data">
@@ -118,15 +130,19 @@ function AirtimeForm() {
             type="tel"
             name="phone"
             id="phone"
+            inputMode="numeric"
+            pattern="[0-9]{11}"
+            maxLength={11}
             placeholder="Enter Phone Number"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             required
           />
         </div>
-        {error && <p className="error-message">{error}</p>}
+        {error && <p className="error-message" role="alert">{error}</p>}
+        {notice && <p role="status">{notice}</p>}
         <div className="form-btn">
-          <input type="submit" value="Buy" className="submit" />
+          <input type="submit" value={busy ? "Processing…" : "Buy"} className="submit" disabled={busy} />
         </div>
       </form>
     </div>
