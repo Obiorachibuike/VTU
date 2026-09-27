@@ -1,0 +1,129 @@
+/* Flights page */
+.fl-wrap { max-width: 980px; margin: 16px auto 70px; color: #1e2330; }
+.fl-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.fl-header h1 { font-size: 24px; font-weight: 800; margin: 0; }
+.fl-views { display: flex; gap: 8px; }
+.fl-views button {
+  padding: 9px 16px; border-radius: 999px; border: 1px solid #e2e6ee; background: #fff;
+  font-weight: 700; font-size: 13.5px; color: #5b6474; cursor: pointer;
+}
+.fl-views button.active { background: #22357c; border-color: #22357c; color: #fff; }
+
+.fl-receipt {
+  margin: 16px 0; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  background: #e2f7ec; border: 1px solid #b9ecd2; border-radius: 12px; padding: 14px 18px;
+}
+.fl-receipt strong { color: #0c9d61; }
+.fl-receipt p { margin: 2px 0 0; font-size: 14px; }
+.fl-receipt code { font-size: 12.5px; background: #ffffff88; padding: 6px 10px; border-radius: 8px; }
+
+.fl-search {
+  margin: 18px 0; background: #fff; border: 1px solid #e8ebf1; border-radius: 16px;
+  padding: 18px; display: grid;
+  grid-template-columns: 1fr auto 1fr 1fr 1fr auto; gap: 10px; align-items: end;
+}
+.fl-field { display: grid; gap: 5px; }
+.fl-field label { font-size: 12px; font-weight: 700; color: #6a7383; text-transform: uppercase; letter-spacing: 0.4px; }
+.fl-field select, .fl-field input {
+  padding: 11px 12px; border: 1px solid #dfe4ee; border-radius: 10px; font-size: 14px; background: #f7f9fc;
+}
+.fl-swap {
+  height: 42px; width: 42px; border-radius: 50%; border: 1px solid #dfe4ee; background: #fff;
+  font-size: 16px; cursor: pointer;
+}
+.fl-search-btn {
+  padding: 12px 22px; border: none; border-radius: 10px; color: #fff; font-weight: 800; cursor: pointer;
+  background: linear-gradient(135deg, #22357c, #3c53b8);
+}
+.fl-search-btn:disabled { opacity: 0.6; }
+
+.fl-error { color: #d43d51; font-weight: 700; }
+.fl-empty { color: #6a7383; background: #fff; border: 1px dashed #dfe4ee; border-radius: 12px; padding: 22px; text-align: center; }
+
+.fl-results { display: grid; gap: 12px; }
+.fl-card {
+  display: grid; grid-template-columns: 1.2fr 2fr 1fr; gap: 16px; align-items: center;
+  background: #fff; border: 1px solid #e8ebf1; border-radius: 14px; padding: 16px 20px;
+}
+.fl-card:hover { border-color: #b9c2e8; }
+.fl-airline { display: flex; gap: 12px; align-items: center; }
+.fl-badge {
+  width: 42px; height: 42px; border-radius: 12px; background: #eef1f6; color: #22357c;
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;
+}
+.fl-airline strong { display: block; font-size: 14.5px; }
+.fl-airline small { color: #8a93a5; font-size: 12px; }
+
+.fl-route { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; text-align: center; }
+.fl-route strong { font-size: 16px; }
+.fl-route small { display: block; color: #6a7383; font-size: 12px; }
+.fl-line span { font-size: 12px; color: #8a93a5; display: block; }
+.fl-line i { font-style: normal; color: #b9c2e8; letter-spacing: 2px; }
+
+.fl-buy { text-align: right; }
+.fl-price strong { font-size: 17px; display: block; }
+.fl-price small { color: #8a93a5; font-size: 11.5px; }
+.fl-buy button {
+  margin-top: 8px; padding: 10px 18px; border-radius: 9px; border: none; font-weight: 800; cursor: pointer;
+  background: #ffc233; color: #1d2433; font-size: 13.5px;
+}
+.fl-buy button:hover { background: #ffd166; }
+
+.fl-bookings { display: grid; gap: 12px; margin-top: 18px; }
+.fl-booking {
+  background: #fff; border: 1px solid #e8ebf1; border-radius: 14px; padding: 16px 20px;
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.fl-booking-main strong { display: block; font-size: 15px; }
+.fl-booking-main small { display: block; color: #6a7383; margin-top: 3px; }
+.fl-pax { color: #3c53b8 !important; font-weight: 600; }
+.fl-booking-side { text-align: right; }
+.fl-booking-side strong { display: block; font-size: 16px; }
+.fl-booking-side code { font-size: 11.5px; color: #8a93a5; display: block; margin-top: 2px; }
+.fl-status { font-size: 11.5px; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: #eef1f6; }
+.fl-status.completed { background: #e2f7ec; color: #0c9d61; }
+.fl-status.pending { background: #fff4dd; color: #b97d10; }
+.fl-status.failed { background: #fde8eb; color: #d43d51; }
+
+.fl-modal {
+  position: fixed; inset: 0; background: rgba(10, 14, 28, 0.6); z-index: 60;
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+}
+.fl-modal-card {
+  background: #fff; border-radius: 18px; padding: 24px; width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+}
+.fl-modal-head h3 { margin: 0 0 4px; font-size: 18px; }
+.fl-modal-head p { margin: 0 0 16px; color: #6a7383; font-size: 13.5px; }
+
+.fl-pax-row { display: grid; grid-template-columns: 1fr 110px auto; gap: 8px; margin-bottom: 8px; }
+.fl-pax-row input, .fl-pax-row select {
+  padding: 11px 12px; border: 1px solid #dfe4ee; border-radius: 9px; font-size: 14px; background: #f7f9fc;
+}
+.fl-pax-remove { border: none; background: none; color: #9aa2b1; cursor: pointer; font-size: 15px; }
+.fl-add-pax {
+  border: none; background: none; color: #3c53b8; font-weight: 700; cursor: pointer; padding: 4px 0 12px;
+  text-align: left;
+}
+.fl-add-pax:disabled { color: #9aa2b1; cursor: not-allowed; }
+.fl-email {
+  width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid #dfe4ee;
+  border-radius: 9px; font-size: 14px; background: #f7f9fc; margin-bottom: 12px;
+}
+
+.fl-total {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #f4f6ff; border-radius: 10px; padding: 12px 16px; font-size: 14px;
+}
+.fl-total strong { font-size: 19px; }
+.fl-pay-note { color: #6a7383; font-size: 12.5px; margin: 8px 0 14px; }
+.fl-modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fl-btn { padding: 13px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; background: linear-gradient(135deg, #22357c, #3c53b8); color: #fff; }
+.fl-btn.ghost { background: #eef1f6; color: #22357c; }
+.fl-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+@media (max-width: 980px) {
+  .fl-search { grid-template-columns: 1fr 1fr; }
+  .fl-card { grid-template-columns: 1fr; text-align: left; }
+  .fl-buy { text-align: left; }
+}

@@ -1,0 +1,72 @@
+/* Demo checkout page */
+.ck-body {
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 10% -10%, #2b3f8f 0%, #131a33 45%, #0b0f1e 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 30px 16px; color: #eef1f8;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.ck-card {
+  width: 100%; max-width: 440px; background: #ffffff; color: #1e2330;
+  border-radius: 18px; padding: 26px 28px; box-shadow: 0 30px 60px rgba(0,0,0,0.45);
+}
+
+.ck-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.ck-logo {
+  width: 42px; height: 42px; border-radius: 12px; background: #22357c; color: #fff;
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;
+}
+.ck-logo span { color: #ffc233; }
+.ck-brand-name { font-weight: 800; font-size: 17px; display: flex; flex-direction: column; }
+.ck-brand-name em { font-style: normal; font-weight: 600; font-size: 11.5px; color: #8a93a5; letter-spacing: 0.4px; }
+
+.ck-summary { border: 1px solid #edf0f6; border-radius: 12px; padding: 14px 16px; display: grid; gap: 8px; margin-bottom: 14px; }
+.ck-summary small { color: #8a93a5; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.4px; }
+.ck-summary p { margin: 1px 0 0; font-weight: 700; font-size: 14px; }
+.ck-ref { font-family: monospace; }
+
+.ck-payline {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #f4f6ff; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+}
+.ck-payline span { font-size: 14px; color: #5b6474; font-weight: 600; }
+.ck-payline strong { font-size: 22px; font-weight: 800; }
+
+.ck-card-fields { border: 1px solid #e5e9f2; border-radius: 12px; padding: 14px 16px 10px; margin: 0 0 16px; }
+.ck-card-fields legend { font-size: 12px; font-weight: 700; color: #8a93a5; padding: 0 6px; }
+.ck-row { display: grid; gap: 10px; margin-bottom: 10px; }
+.ck-row.two { grid-template-columns: 1fr 1fr; }
+.ck-card-fields input {
+  width: 100%; box-sizing: border-box; padding: 12px 12px; border: 1px solid #e0e5ef;
+  border-radius: 9px; font-size: 14.5px; background: #f7f9fc; color: #333;
+}
+
+.ck-btn {
+  display: inline-block; text-align: center; background: linear-gradient(135deg, #22357c, #3c53b8);
+  color: #fff; font-weight: 800; font-size: 15px; border: none; border-radius: 11px;
+  padding: 14px 22px; cursor: pointer; text-decoration: none;
+}
+.ck-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+.ck-btn.ghost { background: #eef1f6; color: #22357c; }
+.ck-btn.wide { width: 100%; }
+
+.ck-actions { display: grid; gap: 10px; margin-top: 16px; }
+.ck-cancel { display: block; text-align: center; margin-top: 14px; color: #8a93a5; font-size: 13px; }
+.ck-cancel:hover { color: #d43d51; }
+
+.ck-state { text-align: center; padding: 14px 0; }
+.ck-icon {
+  width: 68px; height: 68px; border-radius: 50%; display: inline-flex; align-items: center;
+  justify-content: center; font-size: 30px; font-weight: 800; margin-bottom: 12px;
+}
+.ck-icon.ok { background: #e2f7ec; color: #0c9d61; }
+.ck-icon.fail { background: #fde8eb; color: #d43d51; }
+.ck-state h1 { font-size: 22px; margin: 4px 0 8px; }
+.ck-amount { font-size: 30px; font-weight: 800; margin: 10px 0 2px; }
+.ck-amount span { font-size: 14px; font-weight: 600; color: #6a7383; }
+
+.ck-note { color: #5b6474; font-size: 14px; }
+.ck-note.small { font-size: 12.5px; margin: 4px 0 0; }
+
+.ck-secure { color: #9aa6c4; font-size: 12.5px; }

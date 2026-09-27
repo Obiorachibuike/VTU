@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import axios from "axios";
+import api, { setToken, apiErrorMessage } from "../utils/api";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import "./styles/sign_up.css";
@@ -50,26 +50,28 @@ const SignUpForm: React.FC = () => {
     const { confirmPassword, ...dataToSend } = data;
 
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/signup", {
+      const response = await api.post("/auth/signup", {
         ...dataToSend,
         role: "user",
       });
 
       if (response.data) {
         setSuccess(true);
-        localStorage.setItem("token", response.data.token);
+        if (response.data.jwtToken) setToken(response.data.jwtToken);
         setCustomError("");
-        router.push("/login");
         setSuccessMessage("Signup successful!");
+        if (response.data.user?.isVerified) {
+          router.push("/login");
+        } else if (response.data.verifyLink) {
+          window.location.href = response.data.verifyLink;
+        } else {
+          router.push("/login");
+        }
       } else {
         setCustomError("Invalid credentials");
       }
     } catch (error: any) {
-      if (axios.isAxiosError(error)) {
-        setCustomError(error.response?.data?.error || error.message);
-      } else {
-        setCustomError("An unexpected error occurred. Please try again later.");
-      }
+      setCustomError(apiErrorMessage(error, "An unexpected error occurred. Please try again later."));
     } finally {
       setIsLoading(false);
     }

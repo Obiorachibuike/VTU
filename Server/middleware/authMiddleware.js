@@ -1,43 +1,40 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/UserSchema.js');
+const { getModel } = require('../models');
+
+// Extracts the JWT from the Authorization header (Bearer) or the auth cookie.
+const extractToken = (req) => {
+  const header = req.headers.authorization;
+  if (header && header.startsWith('Bearer ')) return header.slice(7);
+  return req.cookies?.authToken || null;
+};
 
 // Middleware to authenticate users
 const authenticateUser = async (req, res, next) => {
   try {
-    // Extract token from cookies
-    console.log(req.cookies);
-    const token = req.cookies['authToken']; // Ensure this matches the cookie name used
-     
-    // Check if token exists
+    const token = extractToken(req);
     if (!token) {
       return res.status(401).json({ message: 'No token provided' });
     }
 
-    // Verify the token using JWT_SECRET
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Find user by ID from decoded token
+    const User = getModel('User');
     const user = await User.findById(decoded.id);
 
-    // Check if user exists
     if (!user) {
       return res.status(401).json({ message: 'Invalid token' });
     }
 
-    // Attach user to the request object
     req.user = user;
+    req.userId = String(user._id);
     next();
   } catch (error) {
-    // Catch any errors and respond with a 401 status
     res.status(401).json({ message: 'Authentication failed' });
   }
 };
 
 // Middleware to authenticate admin users
 const authenticateAdmin = async (req, res, next) => {
-  // First, authenticate the user
   await authenticateUser(req, res, () => {
-    // Check if the user has admin role
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
@@ -45,4 +42,4 @@ const authenticateAdmin = async (req, res, next) => {
   });
 };
 
-module.exports = { authenticateUser, authenticateAdmin };
+module.exports = { authenticateUser, authenticateAdmin, extractToken };

@@ -1,100 +1,107 @@
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const path = require('path');
-const fs = require('fs');
-const db =  require('./utils/db.js')
-const data = require('./cars.json')
-const authRoutes = require('./routes/authRoutes');
-const carRoutes = require('./routes/carRoutes');
-const Car = require('./models/CarSchema.js'); // Ensure this path matches your actual file
-const UserSchema = require('./models/UserSchema.js');
-const deleteAllUsers = require('./utils/remove.js');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-// const secretKey = require('./utils/secreteKey.js')
 require('dotenv').config();
 
-// secretKey
+const express = require('express');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const { connectDb } = require('./utils/db');
+const authRoutes = require('./routes/authRoutes');
+const walletRoutes = require('./routes/walletRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
+const carRoutes = require('./routes/carRoutes');
+const walletController = require('./controllers/walletController');
+const { getDbMode } = require('./utils/db');
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(cookieParser());
 
-// CORS configuration
+// --- CORS ---------------------------------------------------------------
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+  .split(',')
+  .map((o) => o.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
 const corsOptions = {
-  origin: "http://localhost:3000", // Replace with your frontend URL
-  methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type,Authorization",
-  credentials: true, // Allows cookies to be sent
+  origin(origin, callback) {
+    if (!origin) return callback(null, true); // curl / same-origin / mobile apps
+    const bare = origin.replace(/\/$/, '');
+    if (
+      allowedOrigins.includes(bare) ||
+      bare.startsWith('http://localhost') ||
+      bare.startsWith('http://127.0.0.1') ||
+      bare.endsWith('.e2b.app') // sandbox previews
+    ) {
+      return callback(null, true);
+    }
+    callback(null, false);
+  },
+  methods: 'GET,POST,PUT,DELETE,PATCH',
+  allowedHeaders: 'Content-Type,Authorization',
+  credentials: true,
 };
-
-// Session management
-app.use(session({
-  secret: process.env.SECRET_KEY, // Change to a secure secret
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    httpOnly: true, // Prevent access via JavaScript
-    secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-    sameSite: 'Strict', // Restrict cookies to first-party context
-  }
-}));
-
-
-
-// Middleware
 app.use(cors(corsOptions));
+
+// Paystack webhooks need the RAW body for signature verification
+app.use('/api/webhooks/paystack', express.raw({ type: '*/*' }));
+
 app.use(express.json());
 
-// Error handling middleware
+// --- Health -------------------------------------------------------------
+app.get('/health', (req, res) =>
+  res.json({ status: 'ok', db: getDbMode(), paystack: Boolean(process.env.PAYSTACK_SECRET_KEY), time: new Date().toISOString() })
+);
+
+// --- Routes -------------------------------------------------------------
+app.use('/api/auth', authRoutes);
+app.use('/api/wallet', walletRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/webhooks/paystack', (req, res, next) => walletController.paystackWebhook(req, res, next));
+app.use('/api/cars', carRoutes);
+
+// 404 for unknown API routes
+app.use('/api', (req, res) => res.status(404).json({ error: `Route not found: ${req.method} ${req.originalUrl}` }));
+
+// --- Error handler (after routes so it actually catches) -----------------
 app.use((err, req, res, next) => {
-  console.error(err.message); // Log error message
+  console.error('[error]', err.message);
   res.status(500).json({ error: err.message || 'An unexpected error occurred' });
 });
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/cars', carRoutes);
+// --- Bootstrap -----------------------------------------------------------
+const PORT = process.env.PORT || 5000;
 
-// Function to import data
-const importData = async () => {
+const seedDemoUser = async () => {
   try {
-    // Check if data already exists
-    const carCount = await Car.countDocuments();
-    if (carCount > 0) {
-      console.log('Data already exists, skipping import.');
-      return;
-    }
-
-    // Read and parse the JSON file
-    // const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'cars.json'), 'utf-8'));
-    
-
-    // Import the data into MongoDB
-    await Car.insertMany(data);
-
-    console.log('Data imported successfully');
-  } catch (error) {
-    console.error('Error importing data:', error);
+    const { getModel } = require('./models');
+    const User = getModel('User');
+    const email = process.env.DEMO_EMAIL || 'demo@subhub247.com';
+    const existing = await User.findOne({ email });
+    if (existing) return;
+    const user = new User({
+      name: 'Demo User',
+      email,
+      password: process.env.DEMO_PASSWORD || 'demo1234',
+      phone: '08000000000',
+      isVerified: true,
+      wallet: { balance: 50000, currency: 'NGN' },
+    });
+    await user.save();
+    console.log(`[seed] demo account ready — ${email} / ${process.env.DEMO_PASSWORD || 'demo1234'} (₦50,000 balance)`);
+  } catch (e) {
+    console.warn('[seed] demo user skipped:', e.message);
   }
 };
 
-// Connect to MongoDB
-// mongoose.connect(process.env.MONGO_URI, {
-  //   useNewUrlParser: true,
-  //   useUnifiedTopology: true
-// })
-//   .then(() => {
-  //     console.log('Connected to MongoDB');
-  //     // Import data after successful connection
-//     importData();
-//   })
-//   .catch(err => console.error('Error connecting to MongoDB', err));
+(async () => {
+  await connectDb();
 
+  // Only seed the throwaway demo account on the embedded fallback store —
+  // never on a real MongoDB instance.
+  if (getDbMode() === 'file' && process.env.SEED_DEMO_USER !== 'false') {
+    await seedDemoUser();
+  }
 
-db.connection()
-
-// deleteAllUsers()
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT} [db: ${getDbMode()}]`);
+  });
+})();

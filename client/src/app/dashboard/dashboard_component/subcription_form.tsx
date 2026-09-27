@@ -1,125 +1,138 @@
-"use client";
-import React, { useState } from "react";
-import "../styles/subcription_form.css";
+'use client';
 
-interface Plan {
-  label: string;
-  value: string;
-}
+import React, { useEffect, useMemo, useState } from 'react';
+import '../styles/subcription_form.css';
+import '../styles/service_shared.css';
+import api, { apiErrorMessage, formatNaira } from '../../utils/api';
+import { useUserContext } from '../Context/UserContext';
 
-const cablePlans: Record<string, Plan[]> = {
-  DSTV: [
-    { label: "DSTV Padi - ₦2500", value: "dstv_padi" },
-    { label: "DSTV Yanga - ₦3700", value: "dstv_yanga" },
-  ],
-  GoTV: [
-    { label: "GoTV Smallie - ₦1200", value: "gotv_smallie" },
-    { label: "GoTV Jolli - ₦2460", value: "gotv_jolli" },
-  ],
-  StarTimes: [
-    { label: "Nova - ₦900", value: "startimes_nova" },
-    { label: "Basic - ₦1700", value: "startimes_basic" },
-  ],
-};
+interface TvPlan { id: string; label: string; price: number; months: number }
+interface TvProvider { id: string; name: string; image: string; plans: TvPlan[] }
 
-function SubcriptionForm() {
-  const [networkImage, setNetworkImage] = useState("");
-  const [selectedCable, setSelectedCable] = useState("");
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [selectedPlan, setSelectedPlan] = useState("");
-  const [decoderNumber, setDecoderNumber] = useState("");
+const SubscriptionForm = () => {
+  const { refreshUser } = useUserContext();
+  const [providers, setProviders] = useState<TvProvider[]>([]);
+  const [providerId, setProviderId] = useState('');
+  const [planId, setPlanId] = useState('');
+  const [smartcard, setSmartcard] = useState('');
+  const [months, setMonths] = useState(1);
+  const [error, setError] = useState('');
+  const [receipt, setReceipt] = useState<any>(null);
+  const [busy, setBusy] = useState(false);
 
-  const handleCableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const cable = e.target.value;
-    setSelectedCable(cable);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get('/services/catalog');
+        setProviders(res.data.tvProviders || []);
+      } catch (err) {
+        setError(apiErrorMessage(err, 'Could not load subscription plans'));
+      }
+    })();
+  }, []);
 
-    switch (cable) {
-      case "DSTV":
-        setNetworkImage("/image/DSTV.jpg");
-        break;
-      case "GoTV":
-        setNetworkImage("/image/GoTV.jpg");
-        break;
-      case "StarTimes":
-        setNetworkImage("/image/startimes.jpeg");
-        break;
-      default:
-        setNetworkImage("");
-    }
+  const provider = providers.find((p) => p.id === providerId);
+  const plan = provider?.plans.find((p) => p.id === planId);
+  const total = plan ? plan.price * months : 0;
 
-    setPlans(cablePlans[cable] || []);
-    setSelectedPlan("");
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Replace with your backend integration
-    alert(`Subscribing to ${selectedCable} plan ${selectedPlan} for decoder: ${decoderNumber}`);
+    setError('');
+    setReceipt(null);
+    setBusy(true);
+    try {
+      const res = await api.post('/services/tv', { provider: providerId, planId, smartcard, months });
+      setReceipt(res.data.receipt);
+      refreshUser();
+      setSmartcard('');
+      setMonths(1);
+      setPlanId('');
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Subscription payment failed'));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <div className="form-cont" style={{ marginTop: "50px" }}>
-      <form onSubmit={handleSubmit} className="airtime-form form">
+    <div className="form-cont" style={{ marginTop: '50px' }}>
+      <form onSubmit={submit} className="airtime-form form">
         <div className="airtime-header-cont">
-          <h1 className="airtime-header">Recharge Cables</h1>
+          <h1 className="airtime-header">Pay TV Subscription</h1>
         </div>
 
         <div className="network-cont">
-          {networkImage && (
-            <img src={networkImage} alt="Cable Logo" className="network" />
-          )}
+          {provider && <img src={provider.image} alt={provider.name} className="network" />}
         </div>
 
         <div className="form-data">
-          <label htmlFor="cable">Select Cable</label>
-          <select id="cable" value={selectedCable} onChange={handleCableChange} required>
-            <option value="">Choose Cable</option>
-            <option value="GoTV">GoTV</option>
-            <option value="DSTV">DSTV</option>
-            <option value="StarTimes">StarTimes</option>
-          </select>
+          <label>Provider</label>
+          <div className="sv-chips">
+            {providers.map((p) => (
+              <button type="button" key={p.id} className={`sv-chip ${providerId === p.id ? 'active' : ''}`} onClick={() => { setProviderId(p.id); setPlanId(''); }}>
+                {p.name}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {provider && (
+          <div className="form-data">
+            <label htmlFor="plan">Package</label>
+            <select id="plan" value={planId} onChange={(e) => setPlanId(e.target.value)} required>
+              <option value="">Choose package</option>
+              {provider.plans.map((p) => (
+                <option key={p.id} value={p.id}>{p.label} — {formatNaira(p.price)}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="form-data">
-          <label htmlFor="plan">Select Plan</label>
-          <select
-            id="plan"
-            value={selectedPlan}
-            onChange={(e) => setSelectedPlan(e.target.value)}
+          <label htmlFor="smartcard">Smartcard / IUC Number</label>
+          <input
+            id="smartcard"
+            type="text"
+            inputMode="numeric"
+            placeholder="e.g. 7042381937"
+            value={smartcard}
+            onChange={(e) => setSmartcard(e.target.value.replace(/\D/g, ''))}
             required
-            disabled={plans.length === 0}
-          >
-            <option value="">Choose Plan</option>
-            {plans.map((plan) => (
-              <option key={plan.value} value={plan.value}>
-                {plan.label}
-              </option>
+            maxLength={15}
+          />
+        </div>
+
+        <div className="form-data">
+          <label htmlFor="months">Months</label>
+          <select id="months" value={months} onChange={(e) => setMonths(Number(e.target.value))}>
+            {[1, 2, 3, 6, 12].map((m) => (
+              <option key={m} value={m}>{m} month{m > 1 ? 's' : ''}</option>
             ))}
           </select>
         </div>
 
-        <div className="form-data">
-          <label htmlFor="decoder">Decoder Number</label>
-          <input
-            type="text"
-            id="decoder"
-            name="decoder"
-            required
-            placeholder="Enter Decoder Number"
-            value={decoderNumber}
-            onChange={(e) => setDecoderNumber(e.target.value)}
-            pattern="[0-9]{6,20}"
-            maxLength={20}
-          />
-        </div>
+        {plan && (
+          <div className="sv-total">
+            <span>{provider?.name} {plan.label} × {months} month{months > 1 ? 's' : ''}</span>
+            <strong>{formatNaira(total)}</strong>
+          </div>
+        )}
 
-        <div className="form-btn">
-          <input type="submit" value="Subscribe" className="submit" />
-        </div>
+        {error && <p className="sv-msg error">{error}</p>}
+        {receipt && (
+          <div className="sv-receipt">
+            <strong>✅ Subscription active</strong> — {receipt.description}
+            <span className="sv-ref">{receipt.reference}</span>
+          </div>
+        )}
+
+        <button className="sv-submit" type="submit" disabled={busy || !providerId || !planId || !smartcard}>
+          {busy ? 'Processing…' : total ? `Pay ${formatNaira(total)}` : 'Pay Subscription'}
+        </button>
+        <p className="sv-note">Instant activation on your decoder · paid from wallet</p>
       </form>
     </div>
   );
-}
+};
 
-export default SubcriptionForm;
+export default SubscriptionForm;

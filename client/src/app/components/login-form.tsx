@@ -6,7 +6,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Link from "next/link";
 import Image from "next/image";
-import axios, { isAxiosError } from "axios";
+import { isAxiosError } from "axios";
+import api, { setToken, apiErrorMessage } from "../utils/api";
 import { useUserContext } from "../dashboard/Context/UserContext";
 import { useRouter } from 'next/navigation';
 
@@ -28,14 +29,14 @@ function LoginForm() {
     resolver: yupResolver(schema),
   });
 
-  const { setUser, setIsAuthenticated, fetchUserDetails } = useUserContext();
+  const { setUser, setIsAuthenticated } = useUserContext();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     setIsLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/login", {
+      const response = await api.post("/auth/login", {
         email: data.email,
         password: data.password,
         role: "user",
@@ -43,9 +44,8 @@ function LoginForm() {
 
       if (response.status === 200) {
         const token = response.data.jwtToken;
-        fetchUserDetails(token);
-
-        document.cookie = `authToken=${token}; path=/; secure; SameSite=Strict`;
+        setToken(token);
+        if (response.data.user) setUser(response.data.user);
         setIsAuthenticated(true);
         router.push("/dashboard");
       } else {
@@ -55,7 +55,7 @@ function LoginForm() {
       if (isAxiosError(error)) {
         alert(`Error: ${error.response?.data?.error || "Login failed"}`);
       } else {
-        alert("An unexpected error occurred.");
+        alert(apiErrorMessage(error, "An unexpected error occurred."));
       }
       setIsAuthenticated(false);
     } finally {

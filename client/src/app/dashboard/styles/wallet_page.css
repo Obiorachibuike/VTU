@@ -1,0 +1,75 @@
+/* Wallet page */
+.wp-wrap { max-width: 760px; margin: 20px auto 70px; }
+.wp-header { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+.wp-header h1 { font-size: 26px; font-weight: 800; margin: 0; }
+.wp-balance-pill {
+  background: #0f1b3d; color: #fff; padding: 10px 18px; border-radius: 999px;
+  font-size: 14px; box-shadow: 0 8px 18px rgba(15, 27, 61, 0.25);
+}
+.wp-balance-pill strong { font-size: 15px; }
+
+.wp-tabs { display: flex; gap: 8px; margin: 22px 0 18px; }
+.wp-tab {
+  padding: 10px 20px; border-radius: 999px; border: 1px solid #e2e6ee; background: #fff;
+  font-weight: 700; font-size: 14px; color: #5b6474; cursor: pointer;
+}
+.wp-tab.active { background: #22357c; color: #fff; border-color: #22357c; }
+
+.wp-card {
+  background: #fff; border: 1px solid #e8ebf1; border-radius: 16px; padding: 24px 26px;
+  box-shadow: 0 6px 18px rgba(20, 30, 60, 0.06);
+}
+.wp-card h2 { font-size: 19px; font-weight: 800; margin: 0 0 6px; }
+.wp-muted { color: #6a7383; font-size: 14px; margin: 0 0 18px; }
+
+.wp-form { display: grid; gap: 8px; }
+.wp-form label { font-size: 13.5px; font-weight: 700; color: #3c4354; margin-top: 8px; }
+.wp-form input, .wp-form select {
+  padding: 13px 14px; border: 1px solid #dfe4ee; border-radius: 10px; font-size: 15px;
+  background: #f7f9fc; outline: none; width: 100%; box-sizing: border-box;
+}
+.wp-form input:focus, .wp-form select:focus { border-color: #3c53b8; background: #fff; }
+
+.wp-quick { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 4px; }
+.wp-quick button {
+  padding: 8px 14px; border-radius: 999px; border: 1px solid #dfe4ee; background: #fff;
+  font-size: 13px; font-weight: 700; color: #3c4354; cursor: pointer;
+}
+.wp-quick button:hover { border-color: #3c53b8; color: #3c53b8; }
+
+.wp-submit {
+  margin-top: 16px; padding: 14px; border: none; border-radius: 10px; width: 100%;
+  background: linear-gradient(135deg, #22357c, #3c53b8); color: #fff; font-weight: 800;
+  font-size: 15px; cursor: pointer;
+}
+.wp-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.wp-error { color: #d43d51; font-weight: 600; font-size: 13.5px; margin: 6px 0 0; }
+.wp-success { color: #0c9d61; font-weight: 600; font-size: 13.5px; margin: 6px 0 0; }
+
+.wp-accounts { display: grid; gap: 10px; margin-bottom: 18px; }
+.wp-account {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  border: 1.5px solid #e2e6ee; border-radius: 12px; padding: 12px 14px;
+}
+.wp-account.selected { border-color: #3c53b8; background: #f4f6ff; }
+.wp-account label { display: flex; gap: 12px; align-items: center; cursor: pointer; }
+.wp-account strong { display: block; font-size: 14px; }
+.wp-account span { display: block; font-size: 12.5px; color: #6a7383; }
+.wp-remove { background: none; border: none; color: #9aa2b1; font-size: 15px; cursor: pointer; }
+.wp-remove:hover { color: #d43d51; }
+.wp-new-account { display: flex; gap: 10px; align-items: center; font-size: 14px; font-weight: 600; cursor: pointer; color: #3c4354; }
+
+.wp-txns { display: grid; gap: 4px; }
+.wp-txn { display: flex; justify-content: space-between; gap: 14px; padding: 12px 4px; border-bottom: 1px solid #f1f3f8; }
+.wp-txn:last-child { border-bottom: none; }
+.wp-txn-desc { display: block; font-weight: 700; font-size: 14px; }
+.wp-txn-meta { display: block; font-size: 12px; color: #9aa2b1; }
+.wp-txn-side { text-align: right; }
+.wp-amt { font-weight: 800; font-size: 14.5px; display: block; }
+.wp-amt.credit { color: #0c9d61; }
+.wp-amt.debit { color: #d43d51; }
+.wp-badge { font-size: 11.5px; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: #eef1f6; color: #5b6474; }
+.wp-badge.completed { background: #e2f7ec; color: #0c9d61; }
+.wp-badge.pending { background: #fff4dd; color: #b97d10; }
+.wp-badge.failed { background: #fde8eb; color: #d43d51; }

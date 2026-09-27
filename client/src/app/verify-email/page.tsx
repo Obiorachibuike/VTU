@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import axios from 'axios';
+import api from '../utils/api';
 
 const VerifyEmail = () => {
   const searchParams = useSearchParams();
@@ -17,7 +17,7 @@ const VerifyEmail = () => {
 
       if (token) {
         try {
-          const response = await axios.get(`http://localhost:5000/api/auth/verify-email?token=${token}`);
+          const response = await api.get(`/auth/verify-email?token=${token}`);
           console.log(response.data);
           
           setMessage(response.data.message || 'Email verified successfully! Redirecting to login...');

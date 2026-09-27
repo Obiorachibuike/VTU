@@ -1,0 +1,13 @@
+# dependencies
+node_modules/
+
+# runtime data (embedded fallback store)
+Server/.data/
+
+# next.js
+.next/
+out/
+
+# misc
+.DS_Store
+*.log

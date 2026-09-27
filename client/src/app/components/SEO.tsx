@@ -1,5 +1,6 @@
-import Head from 'next/head';
-import { DefaultSeo } from 'next-seo';
+'use client';
+
+import { useEffect } from 'react';
 
 interface SEOProps {
   title: string;
@@ -7,39 +8,27 @@ interface SEOProps {
   canonical: string;
 }
 
-const SEO = ({ title, description, canonical }: SEOProps) => {
-  return (
-    <>
-      <DefaultSeo
-        title={title}
-        description={description}
-        canonical={canonical}
-        openGraph={{
-          type: 'website',
-          locale: 'en_US',
-          url: canonical,
-          title,
-          description,
-          images: [
-            {
-              url: 'https://example.com/og-image.jpg',
-              width: 1200,
-              height: 630,
-              alt: 'Og Image Alt',
-            },
-          ],
-        }}
-        twitter={{
-          handle: '@handle',
-          site: '@site',
-          cardType: 'summary_large_image',
-        }}
-      />
-      <Head>
-        <link rel="canonical" href={canonical} />
-      </Head>
-    </>
-  );
+/**
+ * App-Router-safe SEO helper.
+ *
+ * The App Router manages document head via the metadata API, so this
+ * component simply keeps `document.title` in sync for client navigation.
+ */
+const SEO = ({ title, description }: SEOProps) => {
+  useEffect(() => {
+    document.title = title ? `${title} — SubHub247` : 'SubHub247';
+    if (description) {
+      let meta = document.querySelector('meta[name="description"]');
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('name', 'description');
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', description);
+    }
+  }, [title, description]);
+
+  return null;
 };
 
 export default SEO;

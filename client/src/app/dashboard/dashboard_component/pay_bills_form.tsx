@@ -1,136 +1,155 @@
 'use client';
 
-import React, { useState } from "react";
-import axios from "axios";
-import "../styles/pay_bills_form.css";
+import React, { useEffect, useState } from 'react';
+import '../styles/pay_bills_form.css';
+import '../styles/service_shared.css';
+import api, { apiErrorMessage, formatNaira } from '../../utils/api';
+import { useUserContext } from '../Context/UserContext';
 
-function PaybillsForm() {
-  const [meterNumber, setMeterNumber] = useState("");
-  const [company, setCompany] = useState("");
-  const [meterType, setMeterType] = useState("");
-  const [amount, setAmount] = useState<number>(0);
-  const [verificationResponse, setVerificationResponse] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+interface Disco { id: string; name: string; image: string }
+interface MeterType { id: string; label: string }
 
-  const companyProductMap: Record<string, string> = {
-    "Abuja (AEDC)": "aedcprepaid",
-    "Benin (BEDC)": "bedcprepaid",
-    "Eko (EKEDC)": "ekedcprepaid",
-    "Enugu (EEDC)": "eedcprepaid",
-    "Ibadan (IBEDC)": "ibedcprepaid",
-    "Ikeja (IKEDC)": "ikedcprepaid",
-    "Kaduna (KAEDCO)": "kaedcprepaid",
-    "Kano (KEDCO)": "kedcprepaid",
-    "Portharcourt (PHED)": "phedprepaid",
-  };
+const QUICK = [1000, 2000, 5000, 10000];
 
-  const verifyMeterNumber = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setMeterNumber(value);
-    setError(null);
+const PayBillsForm = () => {
+  const { refreshUser } = useUserContext();
+  const [discos, setDiscos] = useState<Disco[]>([]);
+  const [meterTypes, setMeterTypes] = useState<MeterType[]>([]);
+  const [disco, setDisco] = useState('');
+  const [meterType, setMeterType] = useState('prepaid');
+  const [meterNumber, setMeterNumber] = useState('');
+  const [amount, setAmount] = useState('');
+  const [phone, setPhone] = useState('');
+  const [error, setError] = useState('');
+  const [receipt, setReceipt] = useState<any>(null);
+  const [busy, setBusy] = useState(false);
 
-    if (!company || !companyProductMap[company]) {
-      setError("Please select a valid electrical company.");
-      return;
-    }
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get('/services/catalog');
+        setDiscos(res.data.discos || []);
+        setMeterTypes(res.data.meterTypes || []);
+      } catch (err) {
+        setError(apiErrorMessage(err, 'Could not load providers'));
+      }
+    })();
+  }, []);
 
-    const productid = companyProductMap[company];
+  const activeDisco = discos.find((d) => d.id === disco);
 
-    try {
-      const response = await axios.get(
-        `http://mobilemila.com/vendor/api/checkmeter?username=Obiorachibuike&password=Fanthom456world&meterno=${value}&productid=${productid}`
-      );
-
-      setVerificationResponse(response.data);
-      console.log("Verification response:", response.data);
-    } catch (err) {
-      setError("Failed to verify meter number.");
-      console.error("Verification error:", err);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Submitting form... (connect to backend)");
-    // You can send a POST request here to complete the transaction.
+    setError('');
+    setReceipt(null);
+    setBusy(true);
+    try {
+      const res = await api.post('/services/electricity', {
+        disco, meterType, meterNumber, amount: Number(amount), phone: phone || undefined,
+      });
+      setReceipt(res.data.receipt);
+      refreshUser();
+      setMeterNumber('');
+      setAmount('');
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Electricity payment failed'));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <div className="form-cont" style={{ marginTop: "50px" }}>
-      <form onSubmit={handleSubmit} className="airtime-form form">
+    <div className="form-cont" style={{ marginTop: '50px' }}>
+      <form onSubmit={submit} className="airtime-form form">
         <div className="airtime-header-cont">
-          <h1 className="airtime-header">Pay Electrical Bills</h1>
+          <h1 className="airtime-header">Electricity Bills</h1>
+        </div>
+
+        <div className="network-cont">
+          {activeDisco && <img src={activeDisco.image} alt={activeDisco.name} className="network" />}
         </div>
 
         <div className="form-data">
-          <label htmlFor="company">Electrical Company</label>
-          <select
-            id="company"
-            required
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-          >
-            <option value="">Choose Electrical Company</option>
-            {Object.keys(companyProductMap).map((comp) => (
-              <option key={comp} value={comp}>{comp}</option>
+          <label htmlFor="disco">Provider</label>
+          <select id="disco" value={disco} onChange={(e) => setDisco(e.target.value)} required>
+            <option value="">Choose provider</option>
+            {discos.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </select>
         </div>
 
         <div className="form-data">
-          <label htmlFor="meterType">Meter Type</label>
-          <select
-            id="meterType"
-            required
-            value={meterType}
-            onChange={(e) => setMeterType(e.target.value)}
-          >
-            <option value="">Choose meter type</option>
-            <option value="Prepaid">Prepaid</option>
-            <option value="Postpaid">Postpaid</option>
+          <label htmlFor="meterType">Meter type</label>
+          <select id="meterType" value={meterType} onChange={(e) => setMeterType(e.target.value)}>
+            {meterTypes.map((m) => (
+              <option key={m.id} value={m.id}>{m.label}</option>
+            ))}
           </select>
         </div>
 
         <div className="form-data">
-          <label htmlFor="meterNumber">Meter Number</label>
+          <label htmlFor="meterNumber">Meter number</label>
           <input
-            type="text"
-            required
             id="meterNumber"
-            placeholder="Enter Meter Number"
+            type="text"
+            inputMode="numeric"
+            placeholder="e.g. 12345678901"
             value={meterNumber}
-            onChange={verifyMeterNumber}
+            onChange={(e) => setMeterNumber(e.target.value.replace(/\D/g, ''))}
+            required
+            maxLength={13}
           />
         </div>
 
         <div className="form-data">
-          <label htmlFor="amount">Amount</label>
+          <label htmlFor="amount">Amount (NGN)</label>
           <input
-            type="number"
-            required
             id="amount"
-            placeholder="Enter Amount"
+            type="number"
+            min={500}
+            max={50000}
+            placeholder="e.g. 5000"
             value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
+            onChange={(e) => setAmount(e.target.value)}
+            required
           />
         </div>
 
-        {error && <p className="error-message">{error}</p>}
+        <div className="sv-chips">
+          {QUICK.map((q) => (
+            <button type="button" key={q} className="sv-chip" onClick={() => setAmount(String(q))}>₦{q.toLocaleString()}</button>
+          ))}
+        </div>
 
-        {verificationResponse && (
-          <div className="verification-message">
-            <p style={{ color: "green" }}>
-              ✅ Verified: {verificationResponse?.details || "Meter valid"}
-            </p>
+        <div className="form-data">
+          <label htmlFor="phone">Phone (optional — for the token SMS)</label>
+          <input
+            id="phone"
+            type="tel"
+            placeholder="e.g. 08031234567"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            maxLength={13}
+          />
+        </div>
+
+        {error && <p className="sv-msg error">{error}</p>}
+        {receipt && (
+          <div className="sv-receipt">
+            <strong>✅ Payment successful</strong> — {receipt.description}
+            <span className="sv-ref">{receipt.reference}</span>
+            <p style={{ margin: '6px 0 0', fontSize: 12.5 }}>Your prepaid token is delivered by the disco to the phone number provided.</p>
           </div>
         )}
 
-        <div className="form-btn">
-          <input type="submit" value="Subscribe" className="submit" />
-        </div>
+        <button className="sv-submit" type="submit" disabled={busy || !disco || !meterNumber || !amount}>
+          {busy ? 'Processing…' : amount ? `Pay ${formatNaira(Number(amount))}` : 'Pay Bill'}
+        </button>
+        <p className="sv-note">Min ₦500 · Max ₦50,000 · paid from wallet</p>
       </form>
     </div>
   );
-}
+};
 
-export default PaybillsForm;
+export default PayBillsForm;
