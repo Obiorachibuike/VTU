@@ -1,35 +1,25 @@
 'use client';
 
-import axios from 'axios';
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useState, useContext, useCallback, ReactNode } from 'react';
+import api, { setToken, clearToken, apiErrorMessage } from '../../utils/api';
 
-interface Wallet {
+export interface Wallet {
   balance: number;
   currency: string;
 }
 
-export interface AccountTransaction {
-  _id?: string;
-  amount: number;
-  type: 'credit' | 'debit';
-  status: string;
-  description?: string;
-  date?: string;
-  time?: string;
-  reference?: string;
-  category?: string;
-  mode?: string;
-  metadata?: Record<string, unknown>;
-}
-
 export interface User {
+  id?: string;
   name: string;
   email: string;
+  phone?: string;
   role?: string;
-  transactions: AccountTransaction[];
+  transactions: any[];
+  notifications?: any[];
   wallet: Wallet;
   referralCode: string;
   referralCount: number;
+  isVerified?: boolean;
 }
 
 interface UserContextType {
@@ -38,7 +28,10 @@ interface UserContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
   isLoading: boolean;
-  fetchUserDetails: () => Promise<void>;
+  loginWithToken: (token: string) => Promise<boolean>;
+  fetchUserDetails: (token: string) => void;
+  refreshUser: () => Promise<User | null>;
+  logout: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -48,34 +41,73 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const fetchUserDetails = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get('/api/auth/user/details', { withCredentials: true });
-
-      if (response.status === 200 && response.data.user) {
-        setUser(response.data.user);
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      setUser(null);
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
+  const loadUser = useCallback(async (token: string): Promise<User | null> => {
+    const response = await api.get('/auth/user/details', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (response.status === 200 && response.data.user) {
+      setUser(response.data.user);
+      setIsAuthenticated(true);
+      return response.data.user;
     }
-  };
+    return null;
+  }, []);
 
-  useEffect(() => {
-    void fetchUserDetails();
-    // Cookie-based session is checked once when the app loads.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Login with an existing JWT (e.g. stored in localStorage)
+  const loginWithToken = useCallback(
+    async (token: string) => {
+      setIsLoading(true);
+      try {
+        setToken(token);
+        const loaded = await loadUser(token);
+        return Boolean(loaded);
+      } catch {
+        clearToken();
+        setIsAuthenticated(false);
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [loadUser]
+  );
+
+  // kept for backwards compatibility with existing pages
+  const fetchUserDetails = useCallback(
+    (token: string) => {
+      setIsLoading(true);
+      loadUser(token)
+        .then((loaded) => {
+          if (!loaded) console.warn('Failed to fetch user details');
+        })
+        .catch((error) => {
+          console.error(apiErrorMessage(error));
+          setIsAuthenticated(false);
+        })
+        .finally(() => setIsLoading(false));
+    },
+    [loadUser]
+  );
+
+  const refreshUser = useCallback(async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) return null;
+    try {
+      return await loadUser(token);
+    } catch {
+      return null;
+    }
+  }, [loadUser]);
+
+  const logout = useCallback(() => {
+    clearToken();
+    setUser(null);
+    setIsAuthenticated(false);
   }, []);
 
   return (
     <UserContext.Provider
-      value={{ user, setUser, isAuthenticated, setIsAuthenticated, isLoading, fetchUserDetails }}
+      value={{ user, setUser, isAuthenticated, setIsAuthenticated, isLoading, loginWithToken, fetchUserDetails, refreshUser, logout }}
     >
       {children}
     </UserContext.Provider>

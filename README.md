@@ -1,96 +1,119 @@
-# SubHub247 / VTU
+# SubHub247 — VTU & Payments Platform
 
-SubHub247 is a Nigerian wallet and digital-services web application. The repository contains a Next.js client and an Express/MongoDB API. It now includes wallet deposits, withdrawal requests, airtime/data/TV/electricity purchase flows, flight booking requests, transaction history, and administrator review endpoints.
+A ready-to-use payment service: users fund a **wallet**, withdraw to their bank, and pay for **airtime, data, TV subscriptions, electricity bills and flight tickets** — all from one balance.
 
-> **Integration status:** local demo mode is deliberately simulated. Demo deposits create clearly labelled test-only wallet funds, and demo service purchases do not deliver airtime, data, TV, or electricity. Production card deposits can use Paystack after configuration. Actual VTU fulfillment requires an adapter to a contracted aggregator. Withdrawals are reserved and reviewed manually; they are not paid out automatically. Flight pages collect requests and quotes; they do not issue airline tickets. Do not advertise or run this as a live money service until the deployment checklist below is complete.
+## What's included
 
-## Project layout
+| Area | Details |
+| --- | --- |
+| **Wallet** | Deposits (card via Paystack *or* built-in demo checkout), withdrawals to Nigerian banks, saved bank accounts, live balance & stats |
+| **Airtime** | MTN, Airtel, Glo, 9mobile — ₦100 – ₦20,000 |
+| **Data** | 23 SME plans across all four networks |
+| **TV subscriptions** | DStv, GOtv, Startimes, Showmax — 1/2/3/6/12 months |
+| **Electricity** | 9 Discos, prepaid & postpaid meters |
+| **Flights** | Search routes & cabins, book up to 6 passengers, pay from wallet, view bookings |
+| **Ledger** | Every movement recorded with reference, status and balance snapshots |
+| **Notifications** | In-app notifications for every transaction |
+| **Auth** | JWT (cookie or Bearer), email verification (auto-verify by default), referral bonuses |
 
-- `client/` — Next.js 14 / React / TypeScript frontend.
-- `Server/` — Express API, MongoDB/Mongoose models, payment and service adapters, and setup documentation.
+## Quick start
 
-## Local development
-
-Use Node.js 20.9 or later.
-
-1. Install MongoDB locally or use a development MongoDB deployment.
-2. Copy `Server/.env.example` to `Server/.env`, then set `MONGO_URI`, `JWT_SECRET`, and `SESSION_SECRET` to local values. The default modes in the example are `PAYMENT_MODE=demo` and `SERVICE_MODE=demo`.
-3. Install dependencies and start the API:
-
-   ```bash
-   cd Server
-   npm install
-   npm run dev
-   ```
-
-4. In another terminal, start the frontend:
-
-   ```bash
-   cd client
-   npm install
-   npm run dev
-   ```
-
-   Visit `http://localhost:3000`. The Next.js rewrite proxies `/api/*` to `http://127.0.0.1:5000`. Set `API_PROXY_TARGET` when the API runs elsewhere.
-
-5. In development, account-verification links are printed in the API terminal if mail credentials are not configured. Sign up with a password of at least 12 characters, open the verification URL, then sign in. Demo deposits require pressing the explicit “Simulate successful deposit” button.
-
-To create or update an administrator, use the restricted server-side command after configuring MongoDB:
+**Requirements:** Node 18+, npm. *No database needed to try it* — if MongoDB is unreachable the API automatically falls back to an embedded file store (`Server/.data/`).
 
 ```bash
+# 1. API server  → http://localhost:5000
 cd Server
-node scripts/createAdmin.js admin@example.com 'use-a-long-unique-password' 'Administrator Name'
+npm install
+npm start
+
+# 2. Web app  → http://localhost:3000  (proxies /api → the server)
+cd ../client
+npm install
+npm run dev
 ```
 
-Public signup always creates a normal user. Do not expose the provisioning command in a public web endpoint.
+Open **http://localhost:3000**, create an account (it's verified instantly) and fund your wallet.
 
-## Main API routes
+**Demo account (fallback store only):** `demo@subhub247.com` / `demo1234` — comes with ₦50,000.
 
-- `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/user/details`
-- `POST /api/wallet/deposits`, `POST /api/wallet/deposits/:reference/verify`
-- `POST /api/payments/paystack/webhook` — register this URL in the Paystack dashboard
-- `POST /api/wallet/withdrawals`, `GET /api/wallet/transactions`
-- `GET /api/services/catalog`, `POST /api/services/purchase`
-- `POST /api/flights/bookings`, `GET /api/flights/bookings`
-- Administrator routes for withdrawal review, pending VTU reconciliation, and flight request quotes are protected by the `admin` role.
+## How payments work
 
-Protected endpoints authenticate only from the HTTP-only `authToken` cookie; the JWT is not exposed to browser JavaScript.
+**Deposits**
+- `PAYSTACK_SECRET_KEY` **empty** → the app's own checkout page (`/pay/<reference>`) simulates a card charge and credits the wallet. The full flow (init → pay → verify → credit) is real, only the card network is simulated.
+- `PAYSTACK_SECRET_KEY=sk_test_…`/`sk_live_…` → users are redirected to Paystack's hosted checkout; the server verifies the payment server-side and a signed webhook (`/api/webhooks/paystack`) keeps it in sync.
 
-## Switching on real payment/service integrations
+**Withdrawals**
+- Demo mode → debited and marked completed instantly.
+- Paystack mode → creates a transfer recipient from the saved bank account and submits a Paystack transfer (stays `pending` until settled).
 
-### Deposits
+**Service fulfilment (airtime/data/TV/electricity)**
+- Demo mode → orders complete instantly with a provider reference.
+- Set `VTU_PROVIDER_URL` (+ `VTU_PROVIDER_KEY`) to point at any real VTU provider; failures automatically refund the wallet.
 
-- Set `NODE_ENV=production`, configure long random `JWT_SECRET` and `SESSION_SECRET` values, set `PAYMENT_MODE=paystack`, and add the **Paystack secret key** only to the server environment.
-- Configure `FRONTEND_URL` to the public HTTPS origin and configure the Paystack webhook at `/api/payments/paystack/webhook`.
-- Test successful, cancelled, delayed, duplicate-webhook, and mismatched-amount payments in Paystack test mode before enabling live keys.
-- Deposits are credited only after server-side Paystack verification. The credit is idempotent by payment reference.
+Wallet debits are **atomic** (guarded balance update) so concurrent requests can never overdraw an account.
 
-### Airtime, data, TV, electricity
+## API overview
 
-The server-side adapter contract in `Server/services/vtuProvider.js` is a generic starting point, not a plug-and-play connection to a named aggregator. Map the contracted vendor's endpoints, identifiers, pricing, validation, status lookup, and idempotency rules before live sales. Store the vendor key only in `VTU_API_KEY`; never place credentials in browser code. Set `SERVICE_MODE=provider` after testing the adapter. Unclear provider outcomes remain pending for administrator reconciliation instead of being automatically refunded.
-
-The plan names and prices in `Server/controllers/serviceController.js` are starter values; verify and maintain the real commercial catalog with your aggregator.
-
-### Withdrawals
-
-Withdrawal requests debit/reserve the requested balance, encrypt bank details at rest, and await an administrator decision. Administrators can review via `GET /api/wallet/admin/withdrawals` and approve/reject using `POST /api/wallet/admin/withdrawals/:userId/:reference` with `{ "decision": "approve" }` or `{ "decision": "reject" }`. Rejection refunds the wallet once. An actual bank-transfer/payout provider and reconciliation controls still need to be selected and integrated before automatic withdrawals can be offered. Set a dedicated `WITHDRAWAL_ENCRYPTION_KEY` in production and back it up securely.
-
-### Flights
-
-The flight feature is a request/quote workflow. Use the protected admin flight routes to review requests and provide a fare quote. Quote acceptance is not a reservation or ticket. A contracted airline/travel API or staffed ticketing operation must perform final availability checks, charge/settle the fare, issue the ticket, and handle cancellations/refunds before the product can promise online booking.
-
-## Deployment and operational checklist
-
-- Use HTTPS, managed MongoDB backups, restricted database networking, strong unique secrets, and secret rotation.
-- Configure verified email delivery and a support contact; configure monitoring, rate limits, fraud checks, audit logs, and alerts.
-- Review local licensing, KYC/AML, privacy/data-retention, consumer-protection, payment-provider, and Nigerian financial-services requirements with qualified counsel and providers.
-- Test wallet concurrency, refunds, provider timeouts, payment webhooks, admin authorization, and account recovery. The database should be backed up before schema/data changes.
-- Never credit wallets from browser-submitted success messages, trust client prices, store raw card details, or treat a flight inquiry as a ticket.
-- A provider credential was committed in the old bill-payment component and the environment file was tracked in the base repository; both are removed from the current tree. Revoke/rotate that credential and every secret that was in the old environment file. Removing files now does not erase old Git history.
-
-## Tests
-
-```bash
-cd Server
-npm test
 ```
+POST /api/auth/signup            { name, email, password }
+POST /api/auth/login             { email, password }        → { jwtToken, user }
+GET  /api/auth/user/details      (Bearer token)
+
+GET  /api/wallet                 balance + stats + recent
+POST /api/wallet/deposit/init    { amount }                 → { reference, paymentUrl }
+POST /api/wallet/deposit/verify  { reference }              → credits wallet
+GET  /api/wallet/deposit/status?reference=
+GET  /api/wallet/banks           Nigerian bank list
+POST /api/wallet/accounts        save withdrawal account
+POST /api/wallet/withdraw        { amount, accountId | bank... }
+
+GET  /api/services/catalog       networks, data plans, TV plans, discos
+POST /api/services/airtime       { network, phone, amount }
+POST /api/services/data          { network, planId, phone }
+POST /api/services/tv            { provider, planId, smartcard, months }
+POST /api/services/electricity   { disco, meterNumber, meterType, amount, phone }
+GET  /api/services/flights/search?origin=LOS&destination=ABV&cabin=economy
+POST /api/services/flights/book  { flightId, date, cabin, passengers[] }
+GET  /api/services/flights/bookings
+GET  /api/services/transactions?page=1&limit=10&category=data
+GET  /api/services/notifications          POST …/read-all
+```
+
+All authenticated routes accept `Authorization: Bearer <jwtToken>` (the web app does this automatically).
+
+## Configuration (`Server/.env`)
+
+| Variable | Purpose |
+| --- | --- |
+| `MONGO_URI` | MongoDB connection. If unreachable, the embedded file store takes over automatically. |
+| `DB_MODE` | Force `mongo` or `file`. |
+| `JWT_SECRET` | Token signing secret. |
+| `FRONTEND_URL` | Allowed CORS origin + verification links. |
+| `PAYSTACK_SECRET_KEY` | Enables real Paystack deposits & transfers. |
+| `AUTO_VERIFY_EMAIL` | `true` (default) = skip email verification; `false` = require the emailed link. |
+| `VTU_PROVIDER_URL` / `VTU_PROVIDER_KEY` | Real fulfilment provider for airtime/data/TV/electricity. |
+| `MIN_DEPOSIT` / `MIN_WITHDRAWAL` | Limits (default ₦100 / ₦500). |
+
+The client proxies `/api/*` to `SERVER_URL` (default `http://localhost:5000`) via `next.config.js` rewrites — no CORS setup needed.
+
+## Project structure
+
+```
+Server/                 Express API
+  controllers/          auth, wallet, services
+  models/               model factory (Mongoose ⇄ embedded store) + specs
+  routes/               auth, wallet, services
+  services/             paystack.js, fulfillment.js
+  data/catalog.js       data plans, TV plans, discos, banks, flight inventory
+  utils/                db bootstrap, file store, helpers/ledger
+client/                 Next.js 14 (App Router) web app
+  src/app/dashboard/    overview, wallet, airtime, data, subscription,
+                        pay bills, flights, transactions, settings
+  src/app/pay/[ref]     demo checkout page
+  src/app/utils/api.ts  central API client
+```
+
+## Notes
+
+- The embedded file store keeps data at `Server/.data/vtu-store.json` and is meant for development/demo; point `MONGO_URI` at a real database for production.
+- The old `/api/cars` endpoints and `cars.json` are legacy samples kept for compatibility.

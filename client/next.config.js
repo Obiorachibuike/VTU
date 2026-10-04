@@ -1,9 +1,16 @@
 /** @type {import('next').NextConfig} */
-const backend = process.env.API_PROXY_TARGET || 'http://127.0.0.1:5000';
 const nextConfig = {
-  allowedDevOrigins: ['*.e2b.app'],
+  // Proxy API calls to the backend so the browser always talks to its own
+  // origin (no CORS, works in any deployment). Override the target with the
+  // SERVER_URL env var when the API runs on another host.
   async rewrites() {
-    return [{ source: '/api/:path*', destination: `${backend}/api/:path*` }];
+    const target = process.env.SERVER_URL || 'http://localhost:5000';
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${target}/api/:path*`,
+      },
+    ];
   },
 };
 

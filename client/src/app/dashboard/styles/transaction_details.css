@@ -155,3 +155,15 @@ th {
   color: black;
   cursor: default;
 }
+
+/* live transactions */
+.tx-count { color: #8a93a5; font-size: 14px; font-weight: 600; }
+.tx-filters { margin-bottom: 14px; }
+.tx-filters select {
+  padding: 10px 14px; border: 1px solid #dfe4ee; border-radius: 9px; background: #f7f9fc;
+  font-size: 14px; font-weight: 600; color: #3c4354;
+}
+.tx-error { color: #d43d51; font-weight: 600; }
+.tx-muted { color: #6a7383; }
+.tx-desc { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-credit { color: #0c9d61 !important; font-weight: 700; }

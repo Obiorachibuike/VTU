@@ -21,7 +21,9 @@ function AdminLoginForm() {
       });
 
       if (response.status === 200) {
-        window.location.href = "/admin";
+        const data = response.data;
+        localStorage.setItem("token", data.jwtToken || "");
+        window.location.href = "/dashboard";
       } else {
         setError("Login failed. Please check your credentials and try again.");
       }

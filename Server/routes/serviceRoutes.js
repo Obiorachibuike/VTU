@@ -1,10 +1,26 @@
 const express = require('express');
-const { authenticateUser, authenticateAdmin } = require('../middleware/authMiddleware');
-const asyncHandler = require('../middleware/asyncHandler');
-const { getCatalog, purchase, listPending, resolvePending } = require('../controllers/serviceController');
+const { authenticateUser } = require('../middleware/authMiddleware.js');
+const services = require('../controllers/serviceController.js');
+
 const router = express.Router();
-router.get('/catalog', getCatalog);
-router.post('/purchase', authenticateUser, asyncHandler(purchase));
-router.get('/admin/pending', authenticateAdmin, asyncHandler(listPending));
-router.patch('/admin/pending/:userId/:reference', authenticateAdmin, asyncHandler(resolvePending));
+
+// catalogue (public)
+router.get('/catalog', services.getCatalog);
+router.get('/airports', services.getAirports);
+router.get('/flights/search', services.searchFlights);
+
+// purchases (authenticated)
+router.post('/airtime', authenticateUser, services.buyAirtime);
+router.post('/data', authenticateUser, services.buyData);
+router.post('/tv', authenticateUser, services.buyTv);
+router.post('/electricity', authenticateUser, services.buyElectricity);
+router.post('/flights/book', authenticateUser, services.bookFlight);
+router.get('/flights/bookings', authenticateUser, services.myBookings);
+
+// transactions & notifications (authenticated)
+router.get('/transactions', authenticateUser, services.listTransactions);
+router.get('/transactions/:reference', authenticateUser, services.getTransaction);
+router.get('/notifications', authenticateUser, services.getNotifications);
+router.post('/notifications/read-all', authenticateUser, services.markNotificationsRead);
+
 module.exports = router;

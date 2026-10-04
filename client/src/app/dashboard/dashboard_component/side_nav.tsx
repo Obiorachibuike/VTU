@@ -12,11 +12,14 @@ import {
   faGear,
   faHome,
   faPhone,
+  faPlane,
   faShare,
   faThumbsUp,
+  faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import { useTheme } from "../Context/ThemeContext";
+import { clearToken } from "../../utils/api";
 
 const SideNav = () => {
   const [mode, setMode] = useState("light");
@@ -39,18 +42,6 @@ const SideNav = () => {
             <Link href="/dashboard">
               <FontAwesomeIcon className="uil uil-estate nav-icons" icon={faHome} />
               <span className={`link-name ${theme}`}>Dashboard</span>
-            </Link>
-          </li>
-          <li>
-            <Link href="/dashboard/wallet">
-              <FontAwesomeIcon className="uil uil-share nav-icons" icon={faShare} />
-              <span className={`link-name ${theme}`}>Wallet</span>
-            </Link>
-          </li>
-          <li>
-            <Link href="/dashboard/flights">
-              <FontAwesomeIcon className="uil uil-share nav-icons" icon={faShare} />
-              <span className={`link-name ${theme}`}>Flights</span>
             </Link>
           </li>
           <li>
@@ -90,6 +81,24 @@ const SideNav = () => {
             </Link>
           </li>
           <li>
+            <Link href="/dashboard/flights">
+              <FontAwesomeIcon
+                className="uil uil-plane nav-icons"
+                icon={faPlane}
+              />
+              <span className={`link-name ${theme}`}>Flights</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/dashboard/wallet">
+              <FontAwesomeIcon
+                className="uil uil-wallet nav-icons"
+                icon={faWallet}
+              />
+              <span className={`link-name ${theme}`}>Wallet</span>
+            </Link>
+          </li>
+          <li>
             <Link href="/dashboard/transactions">
               <FontAwesomeIcon className="uil uil-share nav-icons" icon={faShare} />
               <span className={`link-name ${theme}`}>Transaction</span>
@@ -112,10 +121,15 @@ const SideNav = () => {
 
         <ul className="logout-mode">
           <li>
-            <a href="/login" onClick={async (event) => { event.preventDefault(); try { await axios.post('/api/auth/logout'); } finally { window.location.assign('/login'); } }}>
+            <Link
+              href="/login"
+              onClick={() => {
+                clearToken();
+              }}
+            >
               <i className="uil uil-signout"></i>
               <span className={`link-name ${theme}`}>Logout</span>
-            </a>
+            </Link>
           </li>
 
           <li className="mode">

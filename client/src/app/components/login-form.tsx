@@ -6,7 +6,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Link from "next/link";
 import Image from "next/image";
-import axios, { isAxiosError } from "axios";
+import { isAxiosError } from "axios";
+import api, { setToken, apiErrorMessage } from "../utils/api";
 import { useUserContext } from "../dashboard/Context/UserContext";
 import { useRouter } from 'next/navigation';
 
@@ -15,7 +16,7 @@ import "./styles/login-form.css";
 // Define validation schema using yup
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email format").required("Email is required"),
-  password: yup.string().min(12, "Password must be at least 12 characters").required("Password is required"),
+  password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
 });
 
 interface LoginFormInputs {
@@ -28,21 +29,23 @@ function LoginForm() {
     resolver: yupResolver(schema),
   });
 
-  const { setIsAuthenticated, fetchUserDetails } = useUserContext();
+  const { setUser, setIsAuthenticated } = useUserContext();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     setIsLoading(true);
     try {
-      const response = await axios.post("/api/auth/login", {
+      const response = await api.post("/auth/login", {
         email: data.email,
         password: data.password,
         role: "user",
       });
 
       if (response.status === 200) {
-        await fetchUserDetails();
+        const token = response.data.jwtToken;
+        setToken(token);
+        if (response.data.user) setUser(response.data.user);
         setIsAuthenticated(true);
         router.push("/dashboard");
       } else {
@@ -52,7 +55,7 @@ function LoginForm() {
       if (isAxiosError(error)) {
         alert(`Error: ${error.response?.data?.error || "Login failed"}`);
       } else {
-        alert("An unexpected error occurred.");
+        alert(apiErrorMessage(error, "An unexpected error occurred."));
       }
       setIsAuthenticated(false);
     } finally {

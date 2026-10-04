@@ -161,7 +161,7 @@
   align-items: center;
   margin-bottom: 40px;
 }
-.dropdown ul li:nth-child(2) {
+.dropdown ul li:second-child {
   margin-top: 50px;
   padding-top: 20px;
   height: 10px;

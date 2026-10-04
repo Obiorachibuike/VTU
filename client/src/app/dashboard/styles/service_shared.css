@@ -1,0 +1,30 @@
+/* Shared bits for the service purchase forms */
+.sv-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
+.sv-chip {
+  padding: 9px 14px; border-radius: 999px; border: 1.5px solid #dfe4ee; background: #fff;
+  font-size: 13px; font-weight: 700; color: #3c4354; cursor: pointer;
+}
+.sv-chip:hover { border-color: #3c53b8; color: #3c53b8; }
+.sv-chip.active { border-color: #22357c; background: #22357c; color: #fff; }
+
+.sv-msg { padding: 12px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; margin: 12px 0 0; }
+.sv-msg.error { background: #fde8eb; color: #d43d51; }
+.sv-msg.success { background: #e2f7ec; color: #0c9d61; }
+
+.sv-receipt {
+  margin-top: 14px; background: #f4f6ff; border: 1px solid #d9e0f5; border-radius: 12px;
+  padding: 14px 16px; font-size: 13.5px;
+}
+.sv-receipt strong { color: #22357c; }
+.sv-receipt .sv-ref { display: inline-block; margin-left: 8px; font-family: monospace; background: #fff; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e6ee; }
+
+.sv-total { display: flex; justify-content: space-between; background: #f4f6ff; border-radius: 10px; padding: 12px 16px; margin: 6px 0 16px; font-size: 14px; }
+.sv-total strong { font-size: 17px; }
+.sv-balance-note { font-size: 12.5px; color: #6a7383; margin: -8px 0 14px; }
+.sv-submit {
+  display: block; margin: 6px auto 0; padding: 14px 40px; border: none; border-radius: 10px;
+  background: linear-gradient(135deg, #22357c, #3c53b8); color: #fff; font-weight: 800; font-size: 15px;
+  cursor: pointer; min-width: 200px;
+}
+.sv-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+.sv-note { text-align: center; font-size: 12.5px; color: #8a93a5; margin-top: 10px; }

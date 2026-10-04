@@ -1,65 +1,107 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const db = require('./utils/db.js');
+const { connectDb } = require('./utils/db');
 const authRoutes = require('./routes/authRoutes');
-const carRoutes = require('./routes/carRoutes');
 const walletRoutes = require('./routes/walletRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
-const flightRoutes = require('./routes/flightRoutes');
-const { paystackWebhook } = require('./controllers/walletController');
-require('dotenv').config();
+const carRoutes = require('./routes/carRoutes');
+const walletController = require('./controllers/walletController');
+const { getDbMode } = require('./utils/db');
 
 const app = express();
-app.disable('x-powered-by');
-if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1);
+app.set('trust proxy', 1);
 app.use(cookieParser());
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || origin === (process.env.FRONTEND_URL || 'http://localhost:3000') || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || /^https:\/\/[a-zA-Z0-9-]+\.e2b\.app$/.test(origin)) return callback(null, true);
-    return callback(new Error('Origin is not allowed by CORS'));
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}));
-app.use(express.json({ limit: '32kb', verify: (req, res, buffer) => { req.rawBody = Buffer.from(buffer); } }));
-app.use(session({
-  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || 'development-only-session-secret-change-this',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' },
-}));
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'SubHub247 API' }));
-app.post('/api/payments/paystack/webhook', paystackWebhook);
+// --- CORS ---------------------------------------------------------------
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+  .split(',')
+  .map((o) => o.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) return callback(null, true); // curl / same-origin / mobile apps
+    const bare = origin.replace(/\/$/, '');
+    if (
+      allowedOrigins.includes(bare) ||
+      bare.startsWith('http://localhost') ||
+      bare.startsWith('http://127.0.0.1') ||
+      bare.endsWith('.e2b.app') // sandbox previews
+    ) {
+      return callback(null, true);
+    }
+    callback(null, false);
+  },
+  methods: 'GET,POST,PUT,DELETE,PATCH',
+  allowedHeaders: 'Content-Type,Authorization',
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
+// Paystack webhooks need the RAW body for signature verification
+app.use('/api/webhooks/paystack', express.raw({ type: '*/*' }));
+
+app.use(express.json());
+
+// --- Health -------------------------------------------------------------
+app.get('/health', (req, res) =>
+  res.json({ status: 'ok', db: getDbMode(), paystack: Boolean(process.env.PAYSTACK_SECRET_KEY), time: new Date().toISOString() })
+);
+
+// --- Routes -------------------------------------------------------------
 app.use('/api/auth', authRoutes);
-app.use('/api/cars', carRoutes); // Legacy/demo catalog API retained for compatibility.
 app.use('/api/wallet', walletRoutes);
 app.use('/api/services', serviceRoutes);
-app.use('/api/flights', flightRoutes);
+app.use('/api/webhooks/paystack', (req, res, next) => walletController.paystackWebhook(req, res, next));
+app.use('/api/cars', carRoutes);
 
-app.use((req, res) => res.status(404).json({ error: 'Route not found.' }));
+// 404 for unknown API routes
+app.use('/api', (req, res) => res.status(404).json({ error: `Route not found: ${req.method} ${req.originalUrl}` }));
+
+// --- Error handler (after routes so it actually catches) -----------------
 app.use((err, req, res, next) => {
-  console.error('Unhandled API error:', err.message);
-  res.status(err.status || 500).json({ error: err.status && err.status < 500 ? err.message : 'An unexpected server error occurred.' });
+  console.error('[error]', err.message);
+  res.status(500).json({ error: err.message || 'An unexpected error occurred' });
 });
 
+// --- Bootstrap -----------------------------------------------------------
 const PORT = process.env.PORT || 5000;
-async function start() {
-  if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || !process.env.SESSION_SECRET)) {
-    throw new Error('JWT_SECRET and SESSION_SECRET must be configured before production startup.');
+
+const seedDemoUser = async () => {
+  try {
+    const { getModel } = require('./models');
+    const User = getModel('User');
+    const email = process.env.DEMO_EMAIL || 'demo@subhub247.com';
+    const existing = await User.findOne({ email });
+    if (existing) return;
+    const user = new User({
+      name: 'Demo User',
+      email,
+      password: process.env.DEMO_PASSWORD || 'demo1234',
+      phone: '08000000000',
+      isVerified: true,
+      wallet: { balance: 50000, currency: 'NGN' },
+    });
+    await user.save();
+    console.log(`[seed] demo account ready — ${email} / ${process.env.DEMO_PASSWORD || 'demo1234'} (₦50,000 balance)`);
+  } catch (e) {
+    console.warn('[seed] demo user skipped:', e.message);
   }
-  await db.connection();
-  app.listen(PORT, '0.0.0.0', () => console.log(`SubHub247 API listening on port ${PORT}`));
-}
+};
 
-if (require.main === module) {
-  start().catch(error => {
-    console.error('API startup failed:', error.message);
-    process.exit(1);
+(async () => {
+  await connectDb();
+
+  // Only seed the throwaway demo account on the embedded fallback store —
+  // never on a real MongoDB instance.
+  if (getDbMode() === 'file' && process.env.SEED_DEMO_USER !== 'false') {
+    await seedDemoUser();
+  }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT} [db: ${getDbMode()}]`);
   });
-}
-
-module.exports = app;
+})();

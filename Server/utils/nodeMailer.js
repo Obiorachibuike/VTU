@@ -1,24 +1,37 @@
 const nodemailer = require('nodemailer');
-require('dotenv').config();
+require('dotenv').config();  // Ensure environment variables are loaded
 
-const sendMail = async (email, verificationToken) => {
-  const frontend = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const verificationLink = `${frontend}/verify-email?token=${encodeURIComponent(verificationToken)}`;
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
-    if (process.env.NODE_ENV === 'production') throw new Error('Email delivery is not configured.');
-    console.info(`Development email verification link for ${email}: ${verificationLink}`);
-    return;
+// Configure nodemailer transport
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_APP_PASSWORD  // Use the app password here
   }
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_APP_PASSWORD },
-  });
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Verify your SubHub247 account',
-    text: `Verify your email by opening: ${verificationLink}`,
-  });
-};
+});
 
-module.exports = sendMail;
+// Define recipient email and verification link
+const email = 'obiorachibuike22@gmail.com'; // Correctly define the email address
+
+
+const sendMail = async (email , verificationToken) => {
+    try {
+      const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+  
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Verify Your Email',
+        text: `Please verify your email by clicking the following link: ${verificationLink}`
+      });
+  
+      console.log('Verification email sent successfully to:', email);
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      throw new Error('Failed to send verification email');
+    }
+  };
+  
+
+
+module.exports = sendMail

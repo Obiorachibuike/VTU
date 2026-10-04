@@ -1,83 +1,318 @@
 'use client';
-import React, { FormEvent, useEffect, useState } from 'react';
-import axios from 'axios';
-import Layout from '../Layout/Layout';
+
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import SideNav from '../dashboard_component/side_nav';
+import Top from '../dashboard_component/top';
+import '../styles/airtime.css';
+import '../styles/wallet_page.css';
+import api, { apiErrorMessage, formatNaira } from '../../utils/api';
 import { useUserContext } from '../Context/UserContext';
-import './wallet-hub.css';
 
-type Tx = { reference?: string; amount: number; type: string; status: string; description?: string; date?: string };
-const cash = (value: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(value || 0);
+const QUICK_AMOUNTS = [1000, 2000, 5000, 10000, 20000, 50000];
 
-export default function WalletPage() {
-  const { user, setUser } = useUserContext();
-  const [amount, setAmount] = useState('');
+interface Bank { code: string; name: string }
+interface SavedAccount { id: string; bankName: string; bankCode: string; accountNumber: string; accountName: string; isDefault: boolean }
+interface Txn { _id: string; reference: string; description: string; type: string; amount: number; status: string; date: string; time: string; category: string }
+
+function WalletInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<'overview' | 'deposit' | 'withdraw'>(() => (searchParams.get('tab') as any) || 'overview');
+
+  const [balance, setBalance] = useState<number | null>(null);
+  const [txns, setTxns] = useState<Txn[]>([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [accounts, setAccounts] = useState<SavedAccount[]>([]);
+
+  // deposit state
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositBusy, setDepositBusy] = useState(false);
+  const [depositError, setDepositError] = useState('');
+
+  // withdraw state
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [bankName, setBankName] = useState('');
-  const [accountName, setAccountName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [pending, setPending] = useState<{reference: string; amount: number; mode: string; authorizationUrl?: string} | null>(null);
-  const [transactions, setTransactions] = useState<Tx[]>([]);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState('');
+  const [useNewAccount, setUseNewAccount] = useState(false);
+  const [newBank, setNewBank] = useState('');
+  const [newAccountNumber, setNewAccountNumber] = useState('');
+  const [withdrawBusy, setWithdrawBusy] = useState(false);
+  const [withdrawError, setWithdrawError] = useState('');
+  const [withdrawNote, setWithdrawNote] = useState('');
 
-  const reload = async () => {
-    const { data } = await axios.get('/api/wallet/transactions');
-    setTransactions(data.transactions || []);
-    if (user) setUser({ ...user, wallet: data.wallet, transactions: data.transactions });
-  };
-  useEffect(() => {
-    void reload().catch(() => setError('Please sign in to use your wallet.'));
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const reference = params.get('reference');
-      if (params.get('payment') === 'return' && reference) {
-        axios.post(`/api/wallet/deposits/${encodeURIComponent(reference)}/verify`).then(async () => {
-          setMessage('Your deposit has been confirmed.');
-          await reload();
-        }).catch(() => setError('The payment has not been confirmed yet. Refresh in a moment or contact support.'));
-      }
+  const loadAll = useCallback(async () => {
+    try {
+      const [walletRes, banksRes, accountsRes] = await Promise.all([
+        api.get('/wallet'),
+        api.get('/wallet/banks'),
+        api.get('/wallet/accounts'),
+      ]);
+      setBalance(walletRes.data.balance);
+      setTxns(walletRes.data.recent || []);
+      setBanks(banksRes.data.banks || []);
+      setAccounts(accountsRes.data.accounts || []);
+      if (accountsRes.data.accounts?.length) setSelectedAccount(accountsRes.data.accounts[0].id);
+      else setUseNewAccount(true);
+    } catch (err) {
+      setWithdrawError(apiErrorMessage(err, 'Could not load wallet data'));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const startDeposit = async (event: FormEvent) => {
-    event.preventDefault(); setBusy(true); setError(''); setMessage('');
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
+
+  const startDeposit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDepositError('');
+    const amount = Number(depositAmount);
+    if (!amount || amount < 100) {
+      setDepositError('Minimum deposit is ₦100');
+      return;
+    }
+    setDepositBusy(true);
     try {
-      const { data } = await axios.post('/api/wallet/deposits', { amount: Number(amount) });
-      setPending(data);
-      if (data.authorizationUrl) window.location.assign(data.authorizationUrl);
-      else setMessage(data.message || 'Demo deposit ready. Confirm only to add non-cash demo funds.');
-    } catch (err) { setError(axios.isAxiosError(err) ? err.response?.data?.error || 'Could not start deposit.' : 'Could not start deposit.'); }
-    finally { setBusy(false); }
+      const res = await api.post('/wallet/deposit/init', { amount, method: 'card' });
+      router.push(res.data.paymentUrl); // /pay/<reference> (demo) or Paystack checkout
+    } catch (err) {
+      setDepositError(apiErrorMessage(err, 'Could not start deposit'));
+    } finally {
+      setDepositBusy(false);
+    }
   };
 
-  const confirmDemo = async () => {
-    if (!pending) return;
-    setBusy(true); setError('');
+  const removeAccount = async (id: string) => {
+    if (!confirm('Remove this saved account?')) return;
     try {
-      await axios.post(`/api/wallet/deposits/${encodeURIComponent(pending.reference)}/verify`, { confirmDemo: true });
-      setPending(null); setMessage('Demo deposit added to the demo wallet. It is not real cash.'); await reload();
-    } catch (err) { setError(axios.isAxiosError(err) ? err.response?.data?.error || 'Could not confirm deposit.' : 'Could not confirm deposit.'); }
-    finally { setBusy(false); }
+      await api.delete(`/wallet/accounts/${id}`);
+      const remaining = accounts.filter((a) => a.id !== id);
+      setAccounts(remaining);
+      if (selectedAccount === id) {
+        if (remaining.length) setSelectedAccount(remaining[0].id);
+        else { setSelectedAccount(''); setUseNewAccount(true); }
+      }
+    } catch (err) {
+      setWithdrawError(apiErrorMessage(err, 'Could not remove account'));
+    }
   };
 
-  const requestWithdrawal = async (event: FormEvent) => {
-    event.preventDefault(); setBusy(true); setError(''); setMessage('');
+  const submitWithdrawal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setWithdrawError('');
+    setWithdrawNote('');
+    const amount = Number(withdrawAmount);
+    if (!amount || amount < 500) {
+      setWithdrawError('Minimum withdrawal is ₦500');
+      return;
+    }
+    if (balance !== null && amount > balance) {
+      setWithdrawError('Insufficient wallet balance');
+      return;
+    }
+
+    setWithdrawBusy(true);
     try {
-      const { data } = await axios.post('/api/wallet/withdrawals', { amount: Number(withdrawAmount), bankName, accountName, accountNumber });
-      setMessage(`Withdrawal request ${data.reference} is pending manual review.`); setWithdrawAmount(''); await reload();
-    } catch (err) { setError(axios.isAxiosError(err) ? err.response?.data?.error || 'Could not request withdrawal.' : 'Could not request withdrawal.'); }
-    finally { setBusy(false); }
+      let payload: any = { amount };
+      if (useNewAccount) {
+        if (!newBank || !/^\d{10}$/.test(newAccountNumber)) {
+          setWithdrawError('Select a bank and enter a valid 10-digit account number');
+          setWithdrawBusy(false);
+          return;
+        }
+        const bank = banks.find((b) => b.code === newBank);
+        payload = { ...payload, bankName: bank?.name, bankCode: newBank, accountNumber: newAccountNumber, saveAccount: true };
+      } else {
+        if (!selectedAccount) {
+          setWithdrawError('Select a withdrawal account');
+          setWithdrawBusy(false);
+          return;
+        }
+        payload = { ...payload, accountId: selectedAccount };
+      }
+
+      const res = await api.post('/wallet/withdraw', payload);
+      setWithdrawNote(res.data.note || 'Withdrawal successful');
+      setWithdrawAmount('');
+      await loadAll();
+    } catch (err) {
+      setWithdrawError(apiErrorMessage(err, 'Withdrawal failed'));
+    } finally {
+      setWithdrawBusy(false);
+    }
   };
 
-  return <Layout><div className="wallet-hub">
-    <div className="wallet-heading"><div><p className="wallet-eyebrow">YOUR MONEY</p><h1>Wallet</h1><p>Fund your balance, track activity, and request a bank withdrawal.</p></div><div className="wallet-balance"><span>Available balance</span><strong>{cash(user?.wallet?.balance || 0)}</strong></div></div>
-    {(error || message) && <div className={`wallet-alert ${error ? 'is-error' : ''}`} role="status">{error || message}</div>}
-    <div className="wallet-grid">
-      <form className="wallet-card" onSubmit={startDeposit}><h2>Add money</h2><p>Pay securely by card or bank transfer. Minimum ₦100.</p><label htmlFor="deposit-amount">Amount (NGN)</label><input id="deposit-amount" type="number" min="100" max="1000000" step="1" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5,000"/><button disabled={busy}>{busy ? 'Please wait…' : 'Continue to deposit'}</button>{pending?.mode === 'demo' && <div className="demo-confirm"><strong>Demo payment only</strong><p>This will add simulated funds, not actual money.</p><button type="button" disabled={busy} onClick={confirmDemo}>Simulate successful deposit</button></div>}</form>
-      <form className="wallet-card" onSubmit={requestWithdrawal}><h2>Withdraw to bank</h2><p>Requests are held for review. Funds are reserved from your available balance.</p><label htmlFor="withdraw-amount">Amount (NGN)</label><input id="withdraw-amount" type="number" min="100" max="1000000" step="1" required value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="e.g. 2,000"/><label htmlFor="bank-name">Bank</label><input id="bank-name" required maxLength={80} value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Bank name"/><label htmlFor="account-name">Account name</label><input id="account-name" required maxLength={100} value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Name on account"/><label htmlFor="account-number">10-digit account number</label><input id="account-number" required inputMode="numeric" pattern="[0-9]{10}" maxLength={10} value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="0123456789"/><button disabled={busy}>{busy ? 'Please wait…' : 'Request withdrawal'}</button><small>Bank payouts are not automatic yet; an administrator reviews each request.</small></form>
-    </div>
-    <section className="wallet-card wallet-activity"><h2>Recent transactions</h2>{transactions.length === 0 ? <p>No wallet activity yet.</p> : <div className="wallet-table-wrap"><table><thead><tr><th>When</th><th>Details</th><th>Amount</th><th>Status</th><th>Reference</th></tr></thead><tbody>{transactions.slice(0, 30).map((tx, i) => <tr key={tx.reference || i}><td>{tx.date ? new Date(tx.date).toLocaleString() : '—'}</td><td>{tx.description || 'Wallet transaction'}</td><td className={tx.type === 'credit' || tx.status === 'refunded' ? 'credit' : 'debit'}>{tx.type === 'credit' || tx.status === 'refunded' ? '+' : '−'}{cash(tx.amount)}</td><td>{tx.status}</td><td>{tx.reference || '—'}</td></tr>)}</tbody></table></div>}</section>
-  </div></Layout>;
+  const maskAccount = (num: string) => `••••${String(num).slice(-4)}`;
+
+  return (
+    <>
+      <SideNav />
+      <section className="dashboard">
+        <Top />
+        <div className="airtime-container">
+          <div className="airtime-cont">
+            <div className="airtime-content">
+              <div className="wp-wrap">
+                <div className="wp-header">
+                  <h1>Wallet</h1>
+                  <div className="wp-balance-pill">
+                    Balance: <strong>{balance === null ? '…' : formatNaira(balance)}</strong>
+                  </div>
+                </div>
+
+                <div className="wp-tabs">
+                  {(['overview', 'deposit', 'withdraw'] as const).map((t) => (
+                    <button
+                      key={t}
+                      className={`wp-tab ${tab === t ? 'active' : ''}`}
+                      onClick={() => setTab(t)}
+                      type="button"
+                    >
+                      {t === 'overview' ? 'Activity' : t === 'deposit' ? 'Deposit' : 'Withdraw'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* ----------------------------- DEPOSIT ----------------------------- */}
+                {tab === 'deposit' && (
+                  <div className="wp-card">
+                    <h2>Fund your wallet</h2>
+                    <p className="wp-muted">Add money instantly with your card. Deposits land in your wallet immediately after payment.</p>
+                    <form onSubmit={startDeposit} className="wp-form">
+                      <label htmlFor="dep-amount">Amount (NGN)</label>
+                      <input
+                        id="dep-amount"
+                        type="number"
+                        min={100}
+                        placeholder="e.g. 5000"
+                        value={depositAmount}
+                        onChange={(e) => setDepositAmount(e.target.value)}
+                        required
+                      />
+                      <div className="wp-quick">
+                        {QUICK_AMOUNTS.map((a) => (
+                          <button key={a} type="button" onClick={() => setDepositAmount(String(a))}>₦{a.toLocaleString()}</button>
+                        ))}
+                      </div>
+                      {depositError && <p className="wp-error">{depositError}</p>}
+                      <button className="wp-submit" disabled={depositBusy} type="submit">
+                        {depositBusy ? 'Starting…' : 'Continue to payment'}
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+                {/* ----------------------------- WITHDRAW ---------------------------- */}
+                {tab === 'withdraw' && (
+                  <div className="wp-card">
+                    <h2>Withdraw to bank</h2>
+                    <p className="wp-muted">Money is sent to your Nigerian bank account. Withdrawals require at least ₦500.</p>
+
+                    {accounts.length > 0 && (
+                      <div className="wp-accounts">
+                        {accounts.map((a) => (
+                          <div key={a.id} className={`wp-account ${!useNewAccount && selectedAccount === a.id ? 'selected' : ''}`}>
+                            <label>
+                              <input
+                                type="radio"
+                                name="wp-account"
+                                checked={!useNewAccount && selectedAccount === a.id}
+                                onChange={() => { setUseNewAccount(false); setSelectedAccount(a.id); }}
+                              />
+                              <div>
+                                <strong>{a.bankName}</strong>
+                                <span>{maskAccount(a.accountNumber)} — {a.accountName}</span>
+                              </div>
+                            </label>
+                            <button className="wp-remove" type="button" onClick={() => removeAccount(a.id)} title="Remove">✕</button>
+                          </div>
+                        ))}
+                        <label className="wp-new-account">
+                          <input type="radio" name="wp-account" checked={useNewAccount} onChange={() => setUseNewAccount(true)} />
+                          Use a different account
+                        </label>
+                      </div>
+                    )}
+
+                    <form onSubmit={submitWithdrawal} className="wp-form">
+                      {useNewAccount && (
+                        <>
+                          <label htmlFor="w-bank">Bank</label>
+                          <select id="w-bank" value={newBank} onChange={(e) => setNewBank(e.target.value)} required>
+                            <option value="">Choose bank</option>
+                            {banks.map((b) => (
+                              <option key={b.code} value={b.code}>{b.name}</option>
+                            ))}
+                          </select>
+                          <label htmlFor="w-acct">Account number</label>
+                          <input
+                            id="w-acct"
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={10}
+                            placeholder="10-digit account number"
+                            value={newAccountNumber}
+                            onChange={(e) => setNewAccountNumber(e.target.value.replace(/\D/g, ''))}
+                            required
+                          />
+                        </>
+                      )}
+                      <label htmlFor="w-amount">Amount (NGN)</label>
+                      <input
+                        id="w-amount"
+                        type="number"
+                        min={500}
+                        placeholder="e.g. 2500"
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(e.target.value)}
+                        required
+                      />
+                      {withdrawError && <p className="wp-error">{withdrawError}</p>}
+                      {withdrawNote && <p className="wp-success">{withdrawNote}</p>}
+                      <button className="wp-submit" disabled={withdrawBusy} type="submit">
+                        {withdrawBusy ? 'Processing…' : 'Withdraw'}
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+                {/* ----------------------------- ACTIVITY ---------------------------- */}
+                {tab === 'overview' && (
+                  <div className="wp-card">
+                    <h2>Recent activity</h2>
+                    {txns.length === 0 && <p className="wp-muted">No transactions yet.</p>}
+                    {txns.length > 0 && (
+                      <div className="wp-txns">
+                        {txns.map((t) => (
+                          <div key={t._id} className="wp-txn">
+                            <div className="wp-txn-main">
+                              <span className="wp-txn-desc">{t.description}</span>
+                              <span className="wp-txn-meta">{t.reference} · {new Date(t.date).toLocaleDateString('en-NG', { day: '2-digit', month: 'short', year: 'numeric' })} · {t.time}</span>
+                            </div>
+                            <div className="wp-txn-side">
+                              <span className={t.type === 'credit' ? 'wp-amt credit' : 'wp-amt debit'}>
+                                {t.type === 'credit' ? '+' : '-'}{formatNaira(t.amount)}
+                              </span>
+                              <span className={`wp-badge ${t.status}`}>{t.status}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
 }
+
+const WalletPage = () => (
+  <Suspense fallback={<div style={{ padding: 40 }}>Loading wallet…</div>}>
+    <WalletInner />
+  </Suspense>
+);
+
+export default WalletPage;

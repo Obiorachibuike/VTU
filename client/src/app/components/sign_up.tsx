@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import axios from "axios";
+import api, { setToken, apiErrorMessage } from "../utils/api";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import "./styles/sign_up.css";
@@ -13,7 +13,7 @@ import "./styles/sign_up.css";
 const schema = yup.object().shape({
   name: yup.string().required("Full Name is required"),
   email: yup.string().email("Invalid email format").required("Email is required"),
-  password: yup.string().min(12, "Password must be at least 12 characters").required("Password is required"),
+  password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
   confirmPassword: yup
     .string()
     .oneOf([yup.ref("password"), ""], "Passwords must match")
@@ -47,27 +47,31 @@ const SignUpForm: React.FC = () => {
     setSuccess(false);
     setCustomError("");
 
+    const { confirmPassword, ...dataToSend } = data;
+
     try {
-      const response = await axios.post("/api/auth/signup", {
-        name: data.name,
-        email: data.email,
-        password: data.password,
+      const response = await api.post("/auth/signup", {
+        ...dataToSend,
+        role: "user",
       });
 
       if (response.data) {
         setSuccess(true);
+        if (response.data.jwtToken) setToken(response.data.jwtToken);
         setCustomError("");
-        router.push("/login");
         setSuccessMessage("Signup successful!");
+        if (response.data.user?.isVerified) {
+          router.push("/login");
+        } else if (response.data.verifyLink) {
+          window.location.href = response.data.verifyLink;
+        } else {
+          router.push("/login");
+        }
       } else {
         setCustomError("Invalid credentials");
       }
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        setCustomError(error.response?.data?.error || error.message);
-      } else {
-        setCustomError("An unexpected error occurred. Please try again later.");
-      }
+    } catch (error: any) {
+      setCustomError(apiErrorMessage(error, "An unexpected error occurred. Please try again later."));
     } finally {
       setIsLoading(false);
     }
